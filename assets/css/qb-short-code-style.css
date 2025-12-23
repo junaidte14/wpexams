@@ -1,0 +1,351 @@
+table td {
+    text-align: start !important;
+}
+
+.qb_h_header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.qb_header_lft {
+	display:flex;
+	flex-direction:column ;
+	justify-content: center;
+	align-items:center;
+}
+.qb_header_lft img {
+    border-radius: 50%
+}
+
+.qb_header_lft p{
+    text-align: center;
+}
+
+.qb_main {
+    width: 100%;
+    margin-top: 40px;
+}
+
+.qb_content {
+    width: 100%;
+}
+
+.qb_qustions_exams_history_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.anchor_link_btn{
+    padding: 10px 24px;
+    text-decoration: none !important;
+}
+.anchor_link_btn:hover {
+    color: white !important;
+    
+}
+
+.qb_data_tabels {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 25px 0;
+}
+.qb_data_tabels td {
+    text-align: center !important;
+}
+.qb_data_tabels tbody tr:nth-child(even) {
+    background-color: #f5f5f5;
+}
+
+/* TABLE RESPONSIVE */
+@media(max-width : 780px) {
+    .qb_head_menus_links a , .qb_head_menus_links button {
+        font-size: 11px;
+    }
+    .qb_select_type_of_exam {
+        flex-direction: column;
+    }
+    .anchor_link_btn {
+        margin: 10px 0;
+        font-size: 11px;
+    }
+    .qb_subs_exam_question_content button {
+        font-size: 11px;
+    }
+
+    /* TABLE */
+    .qb_data_tabels thead {
+        display: none;
+    }
+
+    .qb_data_tabels ,.qb_data_tabels tbody , .qb_data_tabels tr , .qb_data_tabels td {
+        display: block;
+        width: 100%;
+    }
+    .qb_data_tabels tr {
+        margin-bottom: 20px ;
+    }
+    .qb_data_tabels td {
+        text-align: right;
+        position: relative;
+    }
+    .qb_data_tabels td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0%;
+        width: 50% ;
+        padding-left: 15px;
+        font-size: 15px ;
+        font-weight: bold;
+        text-align: left;
+    }
+}
+
+.qb_questions__immed_false input , .qb_questions_tbody_container input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    -ms-appearance: none;
+    -o-appearance: none;
+    appearance: none;
+}
+
+.qb_questions__immed_false .alphaOptions {
+    padding: 4px 9px;
+    font-size: 15px;
+    border: 1px solid;
+    border-radius: 50%;
+    margin: 0 7px 0 0;
+}
+
+.qb_dspl_questions_col {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    --tw-bg-opacity: 1;
+    padding: 0 10px;
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
+    margin: 5px 0px 0 0px;
+    background-color: rgba(229, 231, 235, var(--tw-bg-opacity));
+}
+#qb_questions_tbody_container label {
+    cursor: pointer ;
+    width: 100% !important;
+}
+.qb_dspl_questions_content_read,
+.qb_dspl_questions_content_edit {
+    --tw-bg-opacity: 1;
+    padding: 10px 10px;
+    border-bottom-left-radius: 0.25rem;
+    border-bottom-right-radius: 0.25rem;
+    margin: 0 10px 5px 10px;
+    background-color: rgba(229, 231, 235, var(--tw-bg-opacity));
+}
+
+.qb_dspl_questions_content_read p,
+.qb_category_content p {
+    margin: 0;
+}
+
+.qb_dspl_questions_content_read.collapsible_content,
+.qb_dspl_questions_content_edit.collapsible_content {
+    display: none;
+}
+
+.qb_dspl_questions_content_edit .qb_questions_col {
+    display: flex;
+    flex-direction: column;
+}
+
+.qb_dspl_questions_content_edit input,
+.qb_dspl_questions_content_edit select,
+.qb_category_field {
+    padding: 10px;
+}
+
+.qb_dspl_questions_col_actions button,
+.qb_dspl_quizzes_col_actions button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+
+.qb_subscriber_answer {
+    background-color: #e9e9e9 !important ;
+}
+
+.qb_subscriber_exam_result {
+    /* margin: 10px 10px 5px 10px; */
+    /* padding: 10px; */
+    border-radius: 0.25rem;
+    /* background-color: rgba(229, 231, 235, 1); */
+}
+
+.qb_subscriber_exam_result.show,
+#qbPrevQuestion.show {
+    display: block;
+}
+#qb_questions_tbody_container .alphaOptions {
+    padding: 5px; /* Adjust padding if necessary */
+    width: 30px;  /* Set equal width and height */
+    height: 30px; /* Ensure it remains a circle */
+    font-size: 14px;
+    border: 1px solid;
+    border-radius: 50%; /* Ensures a perfect circle */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin: 0 7px 0 0;
+}
+
+#qb_questions_tbody_container label > div {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+}
+
+.qb_subscriber_exam_result.hide,
+#qbPrevQuestion.hide ,#qbNxtQuestion.hide , #qbQuestionResult.hide , #qbSubmitQuestion.hide , #qb_questions_explanation_immed.hide {
+    display: none;
+}
+
+/* collapsible style add on questions tabs => result show at the end */
+
+#qbAccordian {
+    /* background: #004050; */
+    margin: 0 auto 0 auto;
+    /* padding-bottom: 17px; */
+    /* color: white; */
+    border: 1px solid #ccc;
+    /* box-shadow: 0 5px 15px 1px rgba(0, 0, 0, .6), 0 0 200px 10px rgba(255, 255, 255, .5); */
+}
+
+#qbAccordian h3 {
+    width: 81%;
+    font-size: 17px;
+    line-height: 34px;
+    padding: 10px 0px;
+    margin: 0%;
+
+}
+
+#qbAccordian div {
+    cursor: pointer;
+}
+
+#qbAccordian p {
+    margin: 0;
+}
+
+#qbAccordian li {
+    list-style: none;
+
+}
+
+#qbAccordian ul ul li a {
+    color: black;
+    text-decoration: none;
+    line-height: 27px;
+    display: block;
+    padding: 10px 15px;
+    transition: all .15s;
+}
+
+#qbAccordian .alphaOptions {
+    padding: 5px; /* Adjust padding if necessary */
+    width: 30px;  /* Set equal width and height */
+    height: 30px; /* Ensure it remains a circle */
+    font-size: 14px;
+    border: 1px solid;
+    border-radius: 50%; /* Ensures a perfect circle */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin: 0 7px 0 0;
+}
+
+#qbAccordian ul ul {
+    display: none;
+}
+
+
+#qbAccordian h3 span {
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+/* Progress Bar */
+.progress-container {
+    width: 100%;
+    margin: 0px 0 12px 0;
+}
+.progress-container,
+.progress {
+    background-color: #eee;
+    border-radius: 5px;
+    position: relative;
+    height: 7px;
+}
+
+.progress {
+    /* background-color: #6F39B0; */
+    width: 0;
+    transition: width 0.4s linear;
+}
+
+.percentage {
+    /* background-color: #6F39B0; */
+    padding: 4px;
+    text-align: center;
+    transition: left 0.4s linear;
+}
+
+/* ================== */
+
+.qb_head_menus_links {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.qb_question_field_show_immed {
+    margin: 10px;
+    cursor: pointer;
+}
+.qb_question_field_show_immed td {
+    padding: 10px;
+}
+.qb_immed_answer_is_true {
+    float: right;
+    color: green;
+}
+.qb_immed_answer_is_false {
+    float: right;
+    color: red;
+}
+
+.qb_immed_exp_stl {
+    margin: 0%;
+}
+
+.qb_result_dp_header_stl {
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.qb_subscriber_answer_sl {
+    background: #aaf3ba !important;
+    /* font-size: 15px; */
+}
+
+.qb_q_number_content {
+    margin-top: 15px;
+}
+.qb_q_numbers_field {
+    width: 100%;
+    padding: 10px;
+}
