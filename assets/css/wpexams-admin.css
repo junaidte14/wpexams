@@ -1,0 +1,279 @@
+/**
+ * WP Exams Admin Styles
+ *
+ * @package WPExams
+ * @since 1.0.0
+ */
+
+/* ============================================
+   GENERAL ADMIN STYLES
+   ============================================ */
+.wpexams-question-main,
+.wpexams-exam-main {
+    margin: 20px 0;
+}
+
+.wpexams-bold {
+    font-weight: bold;
+}
+
+.wpexams-m-0 {
+    margin: 0 !important;
+}
+
+.wpexams-mt-5 {
+    margin-top: 5px;
+}
+
+.wpexams-mt-15 {
+    margin-top: 15px;
+}
+
+.wpexams-mb-20 {
+    margin-bottom: 20px;
+}
+
+.wpexams-text-right {
+    text-align: right;
+}
+
+.wpexams-w-100 {
+    width: 100%;
+}
+
+/* ============================================
+   QUESTION METABOX STYLES
+   ============================================ */
+.wpexams-question-row {
+    margin: 10px 0;
+}
+
+.wpexams-question-col {
+    margin: 10px 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.wpexams-question-col label {
+    margin: 10px 0 5px 0;
+    font-weight: 600;
+}
+
+.wpexams-question-col input {
+    padding: 8px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+}
+
+.wpexams-question-field,
+.wpexams-correct-field,
+.wpexams-question-description-field {
+    padding: 10px;
+    width: 100%;
+}
+
+.wpexams-question-third-row,
+.wpexams-question-description-row {
+    display: flex;
+    flex-direction: column;
+    margin: 15px 0;
+}
+
+.wpexams-question-third-row select,
+.wpexams-question-description-row textarea {
+    margin: 10px 0;
+    padding: 8px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+}
+
+.wpexams-question-description-row textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Remove option button */
+.wpexams-remove-question-option {
+    padding: 8px !important;
+    margin-left: 5px;
+}
+
+.wpexams-remove-question-option .dashicons {
+    line-height: 1.2;
+}
+
+/* Hidden template */
+.wpexams-empty-question-option {
+    display: none;
+}
+
+/* ============================================
+   EXAM METABOX STYLES
+   ============================================ */
+.wpexams-category-content {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.wpexams-category-content p {
+    margin-top: 0;
+}
+
+.wpexams-category-content input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.wpexams-category-content label {
+    margin-right: 15px;
+    display: inline-block;
+}
+
+/* Question number input */
+.wpexams-q-number-content {
+    margin-top: 15px;
+}
+
+.wpexams-q-numbers-field {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+}
+
+/* Question selection */
+.wpexams-question-content {
+    margin-top: 10px;
+}
+
+.wpexams-add-questions {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 4px;
+}
+
+.wpexams-question-id-rl {
+    padding: 8px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.wpexams-question-search-content {
+    max-height: 200px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.wpexams-question-search-content.wpexams-close-dropdown {
+    display: none;
+}
+
+.wpexams-question-options-div {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.wpexams-question-options-div:hover {
+    background: #f5f5f5;
+}
+
+.wpexams-question-options-div input[type="radio"] {
+    margin: 0;
+}
+
+.wpexams-question-options-div span {
+    flex: 1;
+    margin-right: 10px;
+}
+
+/* Hidden template */
+.wpexams-add-questions-hidden {
+    display: none;
+}
+
+/* Timed and answer options */
+.wpexams-timed-content,
+.wpexams-answer-show-immed-content {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 15px 0;
+}
+
+.wpexams-timed-content input[type="checkbox"],
+.wpexams-answer-show-immed-content input[type="radio"] {
+    margin-right: 8px;
+}
+
+.wpexams-timed-content label {
+    font-weight: 600;
+}
+
+.wpexams-answer-show-immed-content > div {
+    margin: 8px 0;
+}
+
+/* ============================================
+   STATUS COLORS IN ADMIN LIST
+   ============================================ */
+.wpexams-status-useless {
+    color: #999;
+}
+
+.wpexams-status-completed {
+    color: #46b450;
+    font-weight: 600;
+}
+
+.wpexams-status-pending {
+    color: #f39c12;
+    font-weight: 600;
+}
+
+.wpexams-status-predefined {
+    color: #0073aa;
+    font-weight: 600;
+}
+
+/* ============================================
+   MIGRATION NOTICE STYLES
+   ============================================ */
+.wpexams-migration-notice {
+    border-left: 4px solid #f39c12;
+}
+
+/* ============================================
+   RESPONSIVE ADMIN STYLES
+   ============================================ */
+@media (max-width: 782px) {
+    .wpexams-question-col input,
+    .wpexams-question-field,
+    .wpexams-correct-field,
+    .wpexams-question-description-field,
+    .wpexams-q-numbers-field,
+    .wpexams-question-id-rl {
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+    
+    .wpexams-question-options-div {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .wpexams-question-options-div input[type="radio"] {
+        margin-top: 8px;
+    }
+}
