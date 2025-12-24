@@ -1,0 +1,213 @@
+<?php
+/**
+ * Exam History Template
+ *
+ * Display user's exam history with scores and options to review
+ *
+ * @package WPExams
+ * @since 1.0.0
+ */
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+// Check if viewing specific exam history
+if ( isset( $_GET['wpexams_history_id'] ) ) {
+	$exam_id = absint( $_GET['wpexams_history_id'] );
+	
+	// Get exam data
+	$exam_data   = wpexams_get_post_data( $exam_id );
+	$exam_result = $exam_data->exam_result;
+	$exam_detail = $exam_data->exam_detail;
+
+	if ( ! $exam_result || ! $exam_detail ) {
+		echo '<p>' . esc_html__( 'Exam history not found.', 'wpexams' ) . '</p>';
+		return;
+	}
+
+	// Calculate score
+	$correct_count = 0;
+	if ( isset( $exam_result['correct_answers'] ) ) {
+		foreach ( $exam_result['correct_answers'] as $answer ) {
+			if ( 'null' !== $answer['answer'] ) {
+				$correct_count++;
+			}
+		}
+	}
+
+	$total_questions = isset( $exam_result['total_questions'] ) ? $exam_result['total_questions'] : 0;
+	$exam_time       = isset( $exam_result['exam_time'] ) ? $exam_result['exam_time'] : '00:00:00';
+
+	?>
+	<div class="wpexams-content">
+		<div class='wpexams-d-flex wpexams-m-tb-20'>
+			<h5 class='wpexams-m-0'>
+				<?php
+				/* translators: 1: correct answers, 2: total questions */
+				printf( esc_html__( 'Score %1$d/%2$d', 'wpexams' ), $correct_count, $total_questions );
+				?>
+			</h5>
+			<?php if ( 'expired' !== $exam_time ) : ?>
+				<span><?php echo esc_html( $exam_time ); ?></span>
+			<?php endif; ?>
+		</div>
+
+		<?php if ( isset( $exam_result['filtered_questions'] ) ) : ?>
+			<?php foreach ( $exam_result['filtered_questions'] as $question_id ) : ?>
+				<?php
+				$question_data = wpexams_get_post_data( $question_id );
+				$question_fields = $question_data->question_fields;
+
+				// Get user's answer
+				$user_answer = wpexams_get_user_answer( $exam_result, $question_id );
+				
+				// Get question time
+				$question_time = wpexams_get_question_time( $exam_result, $question_id );
+				?>
+
+				<div class="wpexams-exam-result wpexams-show">
+					<div id="wpexamsAccordion">
+						<ul class="wpexams-m-0">
+							<li>
+								<div class="wpexams-result-header">
+									<h3><?php echo esc_html( get_the_title( $question_id ) ); ?></h3>
+									<p><span><?php echo esc_html( $question_time ); ?></span> ⮟</p>
+								</div>
+								<ul class="wpexams-m-0 wpexams-d-none">
+									<li>
+										<?php foreach ( $question_fields['options'] as $key => $option ) : ?>
+											<?php
+											$is_correct  = ( 'wpexams_c_option_' . $key === $question_fields['correct_option'] );
+											$is_selected = ( $key == $user_answer );
+											?>
+											<a href="javascript:(0)" 
+											   style="display: flex;align-items: center;" 
+											   class="<?php echo $is_selected ? 'wpexams-subscriber-answer-sl' : ''; ?>">
+												<span class="wpexams-alpha-options <?php echo $is_correct ? 'wpexams-green' : 'wpexams-red'; ?>">
+													<?php echo intval( $key ) + 1; ?>
+												</span>
+												<span style="flex-grow:1;">
+													<?php echo esc_html( str_replace( '_', ' ', $option ) ); ?>
+												</span>
+												<?php if ( $is_correct ) : ?>
+													<span class="wpexams-immed-answer-is-true">✓</span>
+												<?php else : ?>
+													<span class="wpexams-immed-answer-is-false">✗</span>
+												<?php endif; ?>
+											</a>
+										<?php endforeach; ?>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</div>
+			<?php endforeach; ?>
+		<?php endif; ?>
+	</div>
+	<?php
+	return;
+}
+
+// Display exam history list
+?>
+
+<div class="wpexams-content">
+	<p><?php esc_html_e( 'History of exams that you have created.', 'wpexams' ); ?></p>
+
+	<?php
+	// Get user's exams
+	$user_exams = new WP_Query(
+		array(
+			'post_type'      => 'wpexams_exam',
+			'author'         => $current_user_id,
+			'posts_per_page' => -1,
+			'post_status'    => 'publish',
+			'orderby'        => 'date',
+			'order'          => 'DESC',
+		)
+	);
+
+	if ( $user_exams->have_posts() ) :
+		?>
+		<table class='wpexams-data-table'>
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'Date', 'wpexams' ); ?></th>
+					<th><?php esc_html_e( '#Questions', 'wpexams' ); ?></th>
+					<th><?php esc_html_e( 'Type', 'wpexams' ); ?></th>
+					<th><?php esc_html_e( 'Status', 'wpexams' ); ?></th>
+					<th><?php esc_html_e( 'Score', 'wpexams' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php while ( $user_exams->have_posts() ) : ?>
+					<?php
+					$user_exams->the_post();
+					$exam_id = get_the_ID();
+					
+					$exam_data   = wpexams_get_post_data( $exam_id );
+					$exam_result = $exam_data->exam_result;
+					$exam_detail = $exam_data->exam_detail;
+
+					// Only show user-defined exams with results
+					if ( ! $exam_result || ! isset( $exam_result['exam_status'] ) || ! $exam_detail || 'user_defined' !== $exam_detail['role'] ) {
+						continue;
+					}
+
+					$total_questions = isset( $exam_result['total_questions'] ) ? $exam_result['total_questions'] : 0;
+					$exam_status     = $exam_result['exam_status'];
+
+					// Calculate correct answers
+					$correct_count = 0;
+					if ( isset( $exam_result['correct_answers'] ) ) {
+						foreach ( $exam_result['correct_answers'] as $answer ) {
+							if ( 'null' !== $answer['answer'] ) {
+								$correct_count++;
+							}
+						}
+					}
+					?>
+					<tr>
+						<td data-label="<?php esc_attr_e( 'Date', 'wpexams' ); ?>">
+							<?php echo esc_html( get_the_date( 'Y-m-d' ) . '/' . get_the_time( 'H:i:s' ) ); ?>
+						</td>
+						<td data-label="<?php esc_attr_e( '#Questions', 'wpexams' ); ?>">
+							<?php echo esc_html( $total_questions ); ?>
+						</td>
+						<td data-label="<?php esc_attr_e( 'Type', 'wpexams' ); ?>">
+							<?php echo 'admin_defined' === $exam_detail['role'] ? esc_html__( 'Predefined', 'wpexams' ) : esc_html__( 'User Defined', 'wpexams' ); ?>
+						</td>
+						<td data-label="<?php esc_attr_e( 'Status', 'wpexams' ); ?>">
+							<?php echo esc_html( ucfirst( $exam_status ) ); ?>
+						</td>
+						<td data-label="<?php esc_attr_e( 'Score', 'wpexams' ); ?>">
+							<?php if ( 'pending' === $exam_status ) : ?>
+								<a href='?wpexams_exam_id=<?php echo esc_attr( $exam_id ); ?>'>
+									<?php esc_html_e( 'Continue', 'wpexams' ); ?>
+								</a>
+							<?php else : ?>
+								<a href='?wpexams_history&wpexams_history_id=<?php echo esc_attr( $exam_id ); ?>'>
+									<?php
+									/* translators: 1: correct answers, 2: total questions */
+									printf( esc_html__( 'Score %1$d/%2$d', 'wpexams' ), $correct_count, $total_questions );
+									?>
+								</a>
+								<a href='?wpexams_review_id=<?php echo esc_attr( $exam_id ); ?>'>
+									<?php esc_html_e( 'Review', 'wpexams' ); ?>
+								</a>
+							<?php endif; ?>
+						</td>
+					</tr>
+				<?php endwhile; ?>
+				<?php wp_reset_postdata(); ?>
+			</tbody>
+		</table>
+	<?php else : ?>
+		<div class='wpexams-m-10'>
+			<p><?php esc_html_e( 'No exam history exists yet.', 'wpexams' ); ?></p>
+		</div>
+	<?php endif; ?>
+</div>

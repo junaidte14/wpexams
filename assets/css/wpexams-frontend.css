@@ -1,0 +1,445 @@
+/**
+ * WP Exams Frontend Styles
+ *
+ * @package WPExams
+ * @since 2.0.0
+ */
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+.wpexams-w-100 {
+    width: 100%;
+}
+
+.wpexams-green {
+    color: green;
+}
+
+.wpexams-red {
+    color: red;
+}
+
+.wpexams-m-0 {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.wpexams-m-10 {
+    margin: 10px;
+}
+
+.wpexams-mr-15 {
+    margin-right: 15px;
+}
+
+.wpexams-mb-20 {
+    margin-bottom: 20px;
+}
+
+.wpexams-mt-15 {
+    margin-top: 15px;
+}
+
+.wpexams-mt-5 {
+    margin-top: 5px;
+}
+
+.wpexams-m-tb-20 {
+    margin: 20px 0;
+}
+
+.wpexams-bold {
+    font-weight: bold;
+}
+
+.wpexams-pointer {
+    cursor: pointer;
+}
+
+.wpexams-d-none {
+    display: none;
+}
+
+.wpexams-d-block {
+    display: block;
+}
+
+.wpexams-f-right {
+    float: right;
+}
+
+.wpexams-d-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.wpexams-text-center {
+    text-align: center;
+}
+
+.wpexams-text-right {
+    text-align: right;
+}
+
+.wpexams-text-left {
+    text-align: left;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.wpexams-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.wpexams-header-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.wpexams-header-left img {
+    border-radius: 50%;
+    max-width: 80px;
+}
+
+.wpexams-header-left p {
+    text-align: center;
+    margin: 10px 0 0 0;
+}
+
+/* ============================================
+   NAVIGATION MENU
+   ============================================ */
+.wpexams-head-menus-links {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.wpexams-menu-link {
+    padding: 10px 24px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.wpexams-menu-link:hover {
+    opacity: 0.8;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.wpexams-button,
+.wpexams-exam-button {
+    padding: 10px 24px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+}
+
+.wpexams-button:hover,
+.wpexams-exam-button:hover {
+    opacity: 0.9;
+}
+
+/* ============================================
+   TABLES
+   ============================================ */
+.wpexams-data-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 25px 0;
+}
+
+.wpexams-data-table th,
+.wpexams-data-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.wpexams-data-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.wpexams-data-table tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+.wpexams-data-table td {
+    text-align: center !important;
+}
+
+/* ============================================
+   EXAM QUESTIONS
+   ============================================ */
+.wpexams-exam-question-content {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 20px 0;
+}
+
+#wpexams-question-head {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+}
+
+#wpexams-question-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.wpexams-question-options input[type="radio"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    margin-right: 10px;
+}
+
+.wpexams-question-options label {
+    cursor: pointer;
+    display: block;
+    padding: 12px;
+    margin: 8px 0;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.wpexams-question-options label:hover {
+    background-color: #f5f5f5;
+    border-color: #999;
+}
+
+.wpexams-question-options label > div {
+    display: flex;
+    align-items: center;
+}
+
+.wpexams-alpha-options {
+    padding: 5px;
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+    border: 1px solid #333;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.wpexams-subscriber-answer {
+    background-color: #e9e9e9 !important;
+}
+
+.wpexams-subscriber-answer-sl {
+    background: #aaf3ba !important;
+}
+
+.wpexams-immed-answer-is-true {
+    float: right;
+    color: green;
+    font-size: 18px;
+}
+
+.wpexams-immed-answer-is-false {
+    float: right;
+    color: red;
+    font-size: 18px;
+}
+
+/* ============================================
+   PROGRESS BAR
+   ============================================ */
+.wpexams-exam-progress {
+    margin: 20px 0;
+}
+
+.wpexams-progress-container {
+    width: 100%;
+    margin: 10px 0;
+}
+
+.wpexams-progress-container,
+.wpexams-progress {
+    background-color: #eee;
+    border-radius: 5px;
+    position: relative;
+    height: 25px;
+}
+
+.wpexams-progress {
+    width: 0;
+    transition: width 0.4s linear;
+}
+
+.wpexams-percentage {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 0;
+    padding: 0 10px;
+    font-weight: bold;
+    transition: left 0.4s linear;
+}
+
+/* ============================================
+   EXAM RESULT ACCORDION
+   ============================================ */
+.wpexams-exam-result {
+    margin: 20px 0;
+}
+
+.wpexams-exam-result.show {
+    display: block;
+}
+
+.wpexams-exam-result.hide {
+    display: none;
+}
+
+#wpexamsAccordion {
+    margin: 0 auto;
+    border: 1px solid #ccc;
+}
+
+#wpexamsAccordion h3 {
+    font-size: 17px;
+    line-height: 34px;
+    padding: 10px 20px;
+    margin: 0;
+    cursor: pointer;
+}
+
+#wpexamsAccordion div {
+    cursor: pointer;
+}
+
+#wpexamsAccordion p {
+    margin: 0;
+}
+
+#wpexamsAccordion li {
+    list-style: none;
+}
+
+#wpexamsAccordion ul {
+    margin: 0;
+    padding: 0;
+}
+
+#wpexamsAccordion ul ul {
+    display: none;
+    background: #f9f9f9;
+}
+
+#wpexamsAccordion ul ul li a {
+    color: black;
+    text-decoration: none;
+    line-height: 27px;
+    display: block;
+    padding: 10px 15px;
+    transition: all 0.15s;
+}
+
+#wpexamsAccordion ul ul li a:hover {
+    background-color: #eee;
+}
+
+.wpexams-result-header {
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f2f2f2;
+}
+
+/* ============================================
+   LOGIN MESSAGE
+   ============================================ */
+.wpexams-login-message {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.wpexams-login-message p {
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 780px) {
+    .wpexams-head-menus-links a,
+    .wpexams-head-menus-links button {
+        font-size: 11px;
+        padding: 8px 16px;
+    }
+
+    .wpexams-exam-button {
+        font-size: 11px;
+    }
+
+    /* Responsive tables */
+    .wpexams-data-table thead {
+        display: none;
+    }
+
+    .wpexams-data-table,
+    .wpexams-data-table tbody,
+    .wpexams-data-table tr,
+    .wpexams-data-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .wpexams-data-table tr {
+        margin-bottom: 20px;
+        border: 1px solid #ddd;
+    }
+
+    .wpexams-data-table td {
+        text-align: right;
+        position: relative;
+        padding-left: 50%;
+    }
+
+    .wpexams-data-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        width: 45%;
+        padding-right: 10px;
+        font-weight: bold;
+        text-align: left;
+    }
+}
+
+/* ============================================
+   HIDE ELEMENTS
+   ============================================ */
+.hide,
+.wpexams-hide {
+    display: none !important;
+}
