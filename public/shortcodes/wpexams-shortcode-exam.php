@@ -113,7 +113,7 @@ function wpexams_load_template( $template_name, $args = array() ) {
 		/**
 		 * Fires before template is loaded
 		 *
-		 * @since 2.0.0
+		 * @since 1.0.0
 		 * @param string $template_name Template name.
 		 * @param array  $args          Template arguments.
 		 */

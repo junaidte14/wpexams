@@ -58,7 +58,7 @@ function wpexams_render_question_metabox( $post ) {
 								/* translators: %d: option number */
 								printf( esc_html__( 'Option %d', 'wpexams' ), intval( $key ) + 1 );
 								?>
-								<span class='wpexams-opt-num'><?php echo intval( $key ) + 1; ?></span>
+								<!-- <span class='wpexams-opt-num'><?php echo intval( $key ) + 1; ?></span> -->
 							</label>
 							
 							<?php if ( intval( $key ) + 1 > $default_options ) : ?>
@@ -131,7 +131,7 @@ function wpexams_render_question_metabox( $post ) {
 								/* translators: %d: option number */
 								printf( esc_html__( 'Option %d', 'wpexams' ), $i );
 								?>
-								<span class='wpexams-opt-num'><?php echo $i; ?></span>
+								<!-- <span class='wpexams-opt-num'><?php echo $i; ?></span> -->
 							</label>
 							<input name="wpexams_question_options[]" 
 								   class="wpexams-question-field" 

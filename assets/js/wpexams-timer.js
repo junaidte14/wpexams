@@ -9,6 +9,10 @@
  * Timed quiz countdown timer (counts down from given time)
  */
 function wpexamsTimedQuizCountdownTimer(hrs, min, sec, timerId) {
+    sec = parseInt(sec);
+    min = parseInt(min);
+    hrs = parseInt(hrs);
+
     sec--;
     
     if (sec === -1) {
@@ -22,9 +26,10 @@ function wpexamsTimedQuizCountdownTimer(hrs, min, sec, timerId) {
     }
     
     // Format time
-    if (sec <= 9) sec = "0" + sec;
-    if (hrs <= 9) hrs = "0" + hrs;
-    const time = hrs + ":" + (min <= 9 ? "0" + min : min) + ":" + sec;
+    let displaySec = sec <= 9 ? "0" + sec : sec;
+    let displayMin = min <= 9 ? "0" + min : min;
+    let displayHrs = hrs <= 9 ? "0" + hrs : hrs;
+    const time = displayHrs + ":" + displayMin + ":" + displaySec;
 
     // Store initial time
     if (!window.wpexamsTimers['timedQuizCountDownTime']) {
@@ -43,7 +48,7 @@ function wpexamsTimedQuizCountdownTimer(hrs, min, sec, timerId) {
     }, 1000);
 
     // Handle expiration
-    if (hrs === '00' && min === '00' && sec === '00') {
+    if (hrs === 0 && min === 0 && sec === 0) {
         const nextBtn = document.getElementById("wpexamsNextQuestion");
         if (nextBtn) {
             nextBtn.setAttribute("onclick", "wpexamsExamExpired()");
@@ -59,6 +64,9 @@ function wpexamsTimedQuizCountdownTimer(hrs, min, sec, timerId) {
  * Untimed quiz countdown timer (counts up from zero)
  */
 function wpexamsUntimedQuizCountdownTimer(hrs, min, sec, timerId) {
+    sec = parseInt(sec);
+    min = parseInt(min);
+    hrs = parseInt(hrs);
     sec++;
     
     if (sec === 60) {
@@ -72,9 +80,10 @@ function wpexamsUntimedQuizCountdownTimer(hrs, min, sec, timerId) {
     }
     
     // Format time
-    if (sec <= 9) sec = "0" + sec;
-    if (hrs <= 9) hrs = "0" + hrs;
-    const time = hrs + ":" + (min <= 9 ? "0" + min : min) + ":" + sec;
+    let displaySec = sec <= 9 ? "0" + sec : sec;
+    let displayMin = min <= 9 ? "0" + min : min;
+    let displayHrs = hrs <= 9 ? "0" + hrs : hrs;
+    const time = displayHrs + ":" + displayMin + ":" + displaySec;
 
     // Update display
     const timerElement = document.getElementById("wpexams_exam_timer");
@@ -97,6 +106,9 @@ function wpexamsUntimedQuizCountdownTimer(hrs, min, sec, timerId) {
  * Question countdown timer (tracks time per question)
  */
 function wpexamsQuestionCountdownTimer(hrs, min, sec, timerId) {
+    sec = parseInt(sec);
+    min = parseInt(min);
+    hrs = parseInt(hrs);
     sec++;
     
     if (sec === 60) {
@@ -110,9 +122,10 @@ function wpexamsQuestionCountdownTimer(hrs, min, sec, timerId) {
     }
     
     // Format time
-    if (sec <= 9) sec = "0" + sec;
-    if (hrs <= 9) hrs = "0" + hrs;
-    const time = hrs + ":" + (min <= 9 ? "0" + min : min) + ":" + sec;
+    let displaySec = sec <= 9 ? "0" + sec : sec;
+    let displayMin = min <= 9 ? "0" + min : min;
+    let displayHrs = hrs <= 9 ? "0" + hrs : hrs;
+    const time = displayHrs + ":" + displayMin + ":" + displaySec;
 
     // Update display
     const timerElement = document.getElementById("wpexams_question_timer");

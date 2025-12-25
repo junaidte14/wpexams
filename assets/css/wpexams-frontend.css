@@ -273,11 +273,19 @@
    ============================================ */
 .wpexams-exam-progress {
     margin: 20px 0;
+    width: 100%; /* Ensure the wrapper takes full width */
+    display: block;
 }
 
 .wpexams-progress-container {
     width: 100%;
     margin: 10px 0;
+    background-color: #f0f0f0; /* Light gray background for the track */
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    position: relative;
+    height: 25px;
+    overflow: hidden; /* Ensure the bar doesn't overflow rounded corners */
 }
 
 .wpexams-progress-container,
@@ -290,17 +298,15 @@
 
 .wpexams-progress {
     width: 0;
-    transition: width 0.4s linear;
+    background-color: #4CAF50; /* Add a distinct color for the actual progress */
+    height: 100%;
+    transition: width 0.4s ease;
 }
 
 .wpexams-percentage {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    left: 0;
-    padding: 0 10px;
-    font-weight: bold;
-    transition: left 0.4s linear;
+    font-size: 12px;
+    color: #333;
+    z-index: 2;
 }
 
 /* ============================================
@@ -442,4 +448,41 @@
 .hide,
 .wpexams-hide {
     display: none !important;
+}
+
+.wpexams-show {
+    display: block !important;
+}
+
+/* Timer controls */
+#wpexams_start_timer,
+#wpexams_pause_timer {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Button states */
+button:disabled,
+.wpexams-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Exam result styles */
+.wpexams-exam-result.wpexams-show {
+    display: block;
+}
+
+/* Progress bar animation */
+.wpexams-progress {
+    transition: width 0.4s ease;
+}
+
+.wpexams-percentage {
+    transition: left 0.4s ease;
+}
+
+/* Answer highlighting */
+.wpexams-subscriber-answer input[type="radio"] + span {
+    font-weight: bold;
 }

@@ -57,6 +57,16 @@ function wpexams_deactivate() {
 register_deactivation_hook( __FILE__, 'wpexams_deactivate' );
 
 /**
+ * Load ajax handlers earlier
+ */
+require_once WPEXAMS_PLUGIN_DIR . 'public/ajax/wpexams-exam-navigation.php';
+require_once WPEXAMS_PLUGIN_DIR . 'public/ajax/wpexams-exam-save.php';
+require_once WPEXAMS_PLUGIN_DIR . 'public/ajax/wpexams-exam-submit.php';
+require_once WPEXAMS_PLUGIN_DIR . 'public/ajax/wpexams-exam-expired.php';
+require_once WPEXAMS_PLUGIN_DIR . 'public/ajax/wpexams-exam-review.php';
+require_once WPEXAMS_PLUGIN_DIR . 'public/ajax/wpexams-exam-reset.php';
+
+/**
  * Load core files
  */
 require_once WPEXAMS_PLUGIN_DIR . 'includes/wpexams-functions.php';

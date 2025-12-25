@@ -2,7 +2,7 @@
  * WP Exams Main JavaScript
  *
  * @package WPExams
- * @since 2.0.0
+ * @since 1.0.0
  */
 
 (function($) {
@@ -245,6 +245,34 @@
         const diffTimeElement = document.getElementById("wpexams_exam_diff_time");
         if (diffTimeElement) {
             diffTimeElement.innerText = hrs + ":" + min + ":" + sec;
+        }
+    };
+
+    /**
+     * Restart timer
+     */
+    window.wpexamsRestartTimer = function(hrs, min, sec, timerId) {
+        if (window.wpexamsTimers[timerId]) {
+            window.clearTimeout(window.wpexamsTimers[timerId]);
+            delete window.wpexamsTimers[timerId];
+        }
+    };
+
+    /**
+     * Set progress percentage
+     */
+    window.wpexamsSetPercentage = function() {
+        const progressContainer = document.querySelector('.wpexams-exam-progress');
+        if (!progressContainer) return;
+        
+        const percentage = document.querySelector(".wpexams-progress-container").getAttribute('data-percentage') + '%';
+        const progressEl = progressContainer.querySelector('.wpexams-progress');
+        const percentageEl = progressContainer.querySelector('.wpexams-percentage');
+        
+        if (progressEl) progressEl.style.width = percentage;
+        if (percentageEl) {
+            percentageEl.innerText = percentage;
+            percentageEl.style.left = percentage;
         }
     };
 

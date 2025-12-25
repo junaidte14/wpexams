@@ -73,7 +73,10 @@ function wpexams_enqueue_frontend_scripts() {
 				'loading'       => __( 'Loading...', 'wpexams' ),
 				'error'         => __( 'An error occurred. Please try again.', 'wpexams' ),
 				'timeExpired'   => __( 'Time has expired!', 'wpexams' ),
-				'confirmReset'  => __( 'Are you sure you want to reset the question bank?', 'wpexams' ),
+				'confirmReset'  => __( 'Are you sure you want to reset the question bank? This will clear the history of used questions.', 'wpexams' ),
+				'next'          => __( 'Next', 'wpexams' ),
+				'showResult'    => __( 'Show Result', 'wpexams' ),
+				'previous'      => __( 'Previous', 'wpexams' ),
 			),
 		)
 	);

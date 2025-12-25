@@ -95,7 +95,7 @@ if ( '1' === $exam_detail['is_timed'] ) {
 				<span class='wpexams-d-none wpexams-pointer wpexams-mr-15' id='wpexams_start_timer' 
 					  onclick="wpexamsStartTimer('<?php echo '1' === $exam_detail['is_timed'] ? 'wpexamsTimedTimer' : 'wpexamsUntimedTimer'; ?>','wpexamsQuestionTimer')">▶</span>
 				<span class='wpexams-mr-15 wpexams-pointer' id='wpexams_pause_timer' 
-					  onclick="wpexamsPauseTimer('<?php echo '1' === $exam_detail['is_timed'] ? 'wpexamsTimedTimer' : 'wpexamsUntimedTimer'; ?>','wpexamsQuestionTimer')">⏸⏸</span>
+					  onclick="wpexamsPauseTimer('<?php echo '1' === $exam_detail['is_timed'] ? 'wpexamsTimedTimer' : 'wpexamsUntimedTimer'; ?>','wpexamsQuestionTimer')">⏸</span>
 				<div id="wpexams_exam_timer"></div>
 			</h5>
 		</div>
@@ -163,16 +163,25 @@ if ( '1' === $exam_detail['is_timed'] ) {
 				<?php endif; ?>
 
 				<div class='wpexams-text-center'>
-					<button id='wpexamsPrevQuestion' class='wpexams-button wpexams-exam-button wpexams-hide' 
-							onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', 'prev', '<?php echo esc_js( $exam_detail['show_answer_immediately'] ); ?>', '<?php echo esc_js( $exam_id ); ?>')">
+					<button id="wpexamsPrevQuestion" 
+							class='wpexams-button wpexams-exam-button wpexams-hide' 
+							data-question="<?php echo esc_attr($first_question_id); ?>" 
+							data-action="prev" 
+							data-exam="<?php echo esc_attr($exam_id); ?>">
 						<?php esc_html_e( 'Previous', 'wpexams' ); ?>
 					</button>
-					<button id='wpexamsNextQuestion' class='wpexams-button wpexams-exam-button <?php echo '1' === $exam_detail['show_answer_immediately'] ? 'wpexams-hide' : ''; ?>' 
-							onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', '<?php echo $question_count === 1 ? 'show_result' : 'next'; ?>', '<?php echo esc_js( $exam_detail['show_answer_immediately'] ); ?>', '<?php echo esc_js( $exam_id ); ?>')">
-						<?php echo $question_count === 1 ? esc_html__( 'Show Result', 'wpexams' ) : esc_html__( 'Next', 'wpexams' ); ?>
+					<button id="wpexamsNextQuestion" 
+							class='wpexams-button wpexams-exam-button <?php echo '1' === $exam_detail['show_answer_immediately'] ? 'wpexams-hide' : ''; ?>' 
+							data-question="<?php echo esc_attr($first_question_id); ?>" 
+							data-action="next" 
+							data-exam="<?php echo esc_attr($exam_id); ?>">
+						<?php esc_html_e( 'Next', 'wpexams' ); ?>
 					</button>
-					<button id='wpexamsExitExam' class='wpexams-button wpexams-exam-button' 
-							onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', 'exit', '<?php echo esc_js( $exam_detail['show_answer_immediately'] ); ?>', '<?php echo esc_js( $exam_id ); ?>')">
+					<button id='wpexamsExitExam' 
+							class='wpexams-button wpexams-exam-button' 
+							data-question="<?php echo esc_attr( $first_question_id ); ?>" 
+							data-action="exit" 
+							data-exam="<?php echo esc_attr( $exam_id ); ?>">
 						<?php esc_html_e( 'Exit', 'wpexams' ); ?>
 					</button>
 				</div>
@@ -196,24 +205,8 @@ jQuery(document).ready(function($) {
 	wpexamsQuestionCountdownTimer(0, 0, 0, "wpexamsQuestionTimer");
 	
 	// Initialize progress
-	const progressContainer = document.querySelector('.wpexams-exam-progress');
-	if (progressContainer) {
+	if (typeof wpexamsSetPercentage === 'function') {
 		wpexamsSetPercentage();
 	}
 });
-
-function wpexamsSetPercentage() {
-	const progressContainer = document.querySelector('.wpexams-exam-progress');
-	if (!progressContainer) return;
-	
-	const percentage = document.querySelector(".wpexams-progress-container").getAttribute('data-percentage') + '%';
-	const progressEl = progressContainer.querySelector('.wpexams-progress');
-	const percentageEl = progressContainer.querySelector('.wpexams-percentage');
-	
-	if (progressEl) progressEl.style.width = percentage;
-	if (percentageEl) {
-		percentageEl.innerText = percentage;
-		percentageEl.style.left = percentage;
-	}
-}
 </script>

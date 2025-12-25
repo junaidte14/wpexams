@@ -17,146 +17,148 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Handle exam question navigation
  */
 function wpexams_ajax_exam_navigation() {
-	// Verify nonce
-	check_ajax_referer( 'wpexams_nonce', 'nonce' );
+    // Verify nonce
+    check_ajax_referer( 'wpexams_nonce', 'nonce' );
 
-	// Check if user is logged in
-	if ( ! is_user_logged_in() ) {
-		wp_send_json_error(
-			array(
-				'message' => __( 'You must be logged in to take exams.', 'wpexams' ),
-			)
-		);
-	}
+    // Check if user is logged in
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error(
+            array(
+                'message' => __( 'You must be logged in to take exams.', 'wpexams' ),
+            )
+        );
+    }
 
-	// Validate required parameters
-	$required_params = array( 'question_id', 'action_type', 'exam_id', 'exam_time', 'question_time' );
-	foreach ( $required_params as $param ) {
-		if ( empty( $_POST[ $param ] ) ) {
-			wp_send_json_error(
-				array(
-					'message' => sprintf(
-						/* translators: %s: parameter name */
-						__( 'Missing required parameter: %s', 'wpexams' ),
-						$param
-					),
-				)
-			);
-		}
-	}
+    // Validate required parameters
+    $required_params = array( 'question_id', 'action_type', 'exam_id', 'exam_time', 'question_time' );
+    foreach ( $required_params as $param ) {
+        if ( empty( $_POST[ $param ] ) ) {
+            wp_send_json_error(
+                array(
+                    'message' => sprintf(
+                        /* translators: %s: parameter name */
+                        __( 'Missing required parameter: %s', 'wpexams' ),
+                        $param
+                    ),
+                )
+            );
+        }
+    }
 
-	// Sanitize inputs
-	$question_id    = absint( $_POST['question_id'] );
-	$action_type    = sanitize_key( $_POST['action_type'] );
-	$exam_id        = absint( $_POST['exam_id'] );
-	$exam_time      = sanitize_text_field( $_POST['exam_time'] );
-	$question_time  = sanitize_text_field( $_POST['question_time'] );
-	$user_answer    = isset( $_POST['user_answer'] ) ? sanitize_key( $_POST['user_answer'] ) : 'null';
-	$show_immediate = isset( $_POST['show_immediate'] ) ? '1' : '0';
+    // Sanitize inputs
+    $question_id    = absint( $_POST['question_id'] );
+    $action_type    = sanitize_key( $_POST['action_type'] );
+    $exam_id        = absint( $_POST['exam_id'] );
+    $exam_time      = sanitize_text_field( $_POST['exam_time'] );
+    $question_time  = sanitize_text_field( $_POST['question_time'] );
+    $user_answer    = isset( $_POST['user_answer'] ) ? sanitize_key( $_POST['user_answer'] ) : 'null';
+    $show_immediate = isset( $_POST['show_immediate'] ) ? '1' : '0';
 
-	// Verify user can access this exam
-	if ( ! wpexams_user_can_take_exam( $exam_id ) ) {
-		wp_send_json_error(
-			array(
-				'message' => __( 'You do not have permission to access this exam.', 'wpexams' ),
-			)
-		);
-	}
+    // Verify user can access this exam
+    if ( ! wpexams_user_can_take_exam( $exam_id ) ) {
+        wp_send_json_error(
+            array(
+                'message' => __( 'You do not have permission to access this exam.', 'wpexams' ),
+            )
+        );
+    }
 
-	// Get exam data
-	$exam_data = wpexams_get_post_data( $exam_id );
+    // Get exam data
+    $exam_data = wpexams_get_post_data( $exam_id );
 
-	if ( empty( $exam_data->exam_detail ) ) {
-		wp_send_json_error(
-			array(
-				'message' => __( 'Exam data not found.', 'wpexams' ),
-			)
-		);
-	}
+    if ( empty( $exam_data->exam_detail ) ) {
+        wp_send_json_error(
+            array(
+                'message' => __( 'Exam data not found.', 'wpexams' ),
+            )
+        );
+    }
 
-	// Handle exit action
-	if ( 'exit' === $action_type ) {
-		wpexams_handle_exam_exit( $exam_id, $question_id, $exam_time, $question_time, $user_answer );
-		return;
-	}
+    // Handle exit action
+    if ( 'exit' === $action_type ) {
+        wpexams_handle_exam_exit( $exam_id, $question_id, $exam_time, $question_time, $user_answer );
+        return;
+    }
 
-	// Get next question ID
-	$next_question = wpexams_get_next_question_id(
-		$question_id,
-		$exam_data->exam_detail,
-		$action_type
-	);
+    // 1. Save current answer before moving to the next question
+    if ( 'null' !== $user_answer ) {
+        wpexams_save_exam_answer(
+            $exam_id,
+            $question_id,
+            $user_answer,
+            $exam_time,
+            $question_time,
+            $show_immediate
+        );
+    }
 
-	if ( ! $next_question ) {
-		wp_send_json_error(
-			array(
-				'message' => __( 'Unable to determine next question.', 'wpexams' ),
-			)
-		);
-	}
+    // 2. Determine the Next/Prev ID using the helper function
+    $next_question_info = wpexams_get_next_question_id(
+        $question_id,
+        $exam_data->exam_detail,
+        $action_type
+    );
 
-	// Save current answer
-	if ( 'null' !== $user_answer ) {
-		wpexams_save_exam_answer(
-			$exam_id,
-			$question_id,
-			$user_answer,
-			$exam_time,
-			$question_time,
-			$show_immediate
-		);
-	}
+    // 3. Logic for handling end-of-exam or beginning-of-exam
+    if ( ! $next_question_info ) {
+        if ( 'next' === $action_type ) {
+            // No more questions forward: trigger result screen
+            $action_type = 'show_result'; 
+        } elseif ( 'prev' === $action_type ) {
+            // No more questions backward
+            wp_send_json_error( array( 'message' => __( 'You are at the beginning.', 'wpexams' ) ) );
+        } else {
+            // General failure
+            wp_send_json_error( array( 'message' => __( 'Unable to determine next question.', 'wpexams' ) ) );
+        }
+    }
 
-	// Check if exam is complete
-	if ( wpexams_is_exam_complete( $exam_id, $next_question['current_id'], $exam_data->exam_detail ) ) {
-		$result_data = wpexams_generate_exam_result( $exam_id, $exam_time );
-		wp_send_json_success(
-			array(
-				'action'     => 'show_result',
-				'result'     => $result_data,
-				'exam_id'    => $exam_id,
-			)
-		);
-	}
+    // 4. Handle Result Screen (triggered by action_type or finishing last question)
+    if ( 'show_result' === $action_type || wpexams_is_exam_complete( $exam_id, $question_id, $exam_data->exam_detail ) ) {
+        $result_data = wpexams_generate_exam_result( $exam_id, $exam_time );
+        wp_send_json_success( array(
+            'action'  => 'show_result',
+            'result'  => $result_data,
+            'exam_id' => $exam_id,
+        ) );
+    }
 
-	// Get next question data
-	$next_question_data = wpexams_get_post_data( $next_question['next_id'] );
+    // 5. Get the Target Question Data
+    $target_question_id = $next_question_info['next_id'];
+    $next_question_data = wpexams_get_post_data( $target_question_id );
 
-	if ( empty( $next_question_data->question_fields ) ) {
-		wp_send_json_error(
-			array(
-				'message' => __( 'Question data not found.', 'wpexams' ),
-			)
-		);
-	}
+    if ( empty( $next_question_data->question_fields ) ) {
+        wp_send_json_error(
+            array(
+                'message' => __( 'Question data not found.', 'wpexams' ),
+            )
+        );
+    }
 
-	// Prepare response
-	$response = array(
-		'action'            => 'show_question',
-		'question_id'       => $next_question['next_id'],
-		'current_id'        => $next_question['current_id'],
-		'question_title'    => get_the_title( $next_question['next_id'] ),
-		'question_options'  => $next_question_data->question_fields['options'],
-		'correct_option'    => $next_question_data->question_fields['correct_option'],
-		'description'       => $next_question_data->question_fields['description'],
-		'all_question_ids'  => $exam_data->exam_detail['filtered_questions'],
-		'show_prev'         => wpexams_should_show_prev( $next_question['next_id'], $exam_data->exam_detail ),
-		'show_next'         => wpexams_should_show_next( $next_question['next_id'], $exam_data->exam_detail ),
-		'progress_percent'  => wpexams_calculate_progress( $next_question['current_id'], $exam_data->exam_detail ),
-	);
+    // 6. Prepare response
+    $response = array(
+        'action'            => 'show_question',
+        'question_id'       => $target_question_id,
+        'current_id'        => $target_question_id,
+        'question_title'    => get_the_title( $target_question_id ),
+        'question_options'  => $next_question_data->question_fields['options'],
+        'correct_option'    => $next_question_data->question_fields['correct_option'],
+        'description'       => $next_question_data->question_fields['description'],
+        'all_question_ids'  => $exam_data->exam_detail['filtered_questions'],
+        'show_prev'         => wpexams_should_show_prev( $target_question_id, $exam_data->exam_detail ),
+        'show_next'         => wpexams_should_show_next( $target_question_id, $exam_data->exam_detail ),
+        'progress_percent'  => wpexams_calculate_progress( $target_question_id, $exam_data->exam_detail ),
+    );
 
-	/**
-	 * Filter navigation response
-	 *
-	 * @since 1.0.0
-	 * @param array $response Response data.
-	 * @param int   $exam_id  Exam ID.
-	 */
-	$response = apply_filters( 'wpexams_navigation_response', $response, $exam_id );
+    /**
+     * Filter navigation response
+     */
+    $response = apply_filters( 'wpexams_navigation_response', $response, $exam_id );
 
-	wp_send_json_success( $response );
+    wp_send_json_success( $response );
 }
 add_action( 'wp_ajax_wpexams_exam_navigation', 'wpexams_ajax_exam_navigation' );
+add_action( 'wp_ajax_nopriv_wpexams_exam_navigation', 'wpexams_ajax_exam_navigation' );
 
 /**
  * Get next question ID based on action
