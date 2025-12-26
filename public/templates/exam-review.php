@@ -1,6 +1,6 @@
 <?php
 /**
- * Exam Review Template
+ * Exam Review Template - FIXED VERSION (Issue #1)
  *
  * Navigate through completed exam questions with explanations
  *
@@ -26,8 +26,15 @@ $exam_data   = wpexams_get_post_data( $exam_id );
 $exam_result = $exam_data->exam_result;
 $exam_detail = $exam_data->exam_detail;
 
+// FIXED: Better validation - check if result exists and has required data
 if ( ! $exam_result || ! $exam_detail ) {
 	echo '<p>' . esc_html__( 'Exam not found.', 'wpexams' ) . '</p>';
+	return;
+}
+
+// FIXED: Check if exam_status exists before comparing
+if ( ! isset( $exam_result['exam_status'] ) ) {
+	echo '<p>' . esc_html__( 'Exam has not been started yet.', 'wpexams' ) . '</p>';
 	return;
 }
 

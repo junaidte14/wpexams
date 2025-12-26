@@ -1,6 +1,6 @@
 <?php
 /**
- * Submit answer immediately AJAX handler
+ * Submit answer immediately AJAX handler - FIXED VERSION (Issue #3)
  *
  * @package WPExams
  * @since 1.0.0
@@ -152,6 +152,15 @@ function wpexams_ajax_submit_answer() {
 	 */
 	do_action( 'wpexams_answer_submitted', $question_id, $user_answer, $is_correct, $exam_id );
 
+	// FIXED: Calculate progress percentage correctly based on current position
+	$current_index = array_search( (int) $question_id, $exam_detail['filtered_questions'], true );
+	$progress_percent = 0;
+	if ( false !== $current_index ) {
+		// Calculate percentage: (current_index + 1) / total * 100
+		// +1 because we've just answered this question
+		$progress_percent = round( ( ( $current_index + 1 ) / $total_questions ) * 100 );
+	}
+
 	// Prepare response
 	$response = array(
 		'is_correct'       => $is_correct,
@@ -161,6 +170,8 @@ function wpexams_ajax_submit_answer() {
 		'solved_questions' => array_values( $exam_result['solved_questions'] ),
 		'used_questions'   => array_values( $exam_result['used_questions'] ),
 		'total_questions'  => $total_questions,
+		'current_index'    => $current_index,
+		'progress_percent' => $progress_percent,
 	);
 
 	wp_send_json_success( $response );

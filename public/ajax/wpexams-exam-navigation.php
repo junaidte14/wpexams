@@ -1,6 +1,6 @@
 <?php
 /**
- * Exam navigation AJAX handler - FIXED VERSION
+ * Exam navigation AJAX handler - FIXED VERSION (Issue #4 - No Duplicates)
  *
  * Handles next/previous question navigation with full security
  *
@@ -65,12 +65,19 @@ function wpexams_ajax_exam_navigation() {
         );
     }
 
-    // FIXED: For predefined (admin_defined) exams, create a user-specific exam instance
+    // FIXED: For predefined (admin_defined) exams, ensure user exam instance exists
+    // This is done ONCE at the start, not on every question submission
     if ( isset( $exam_data->exam_detail['role'] ) && 'admin_defined' === $exam_data->exam_detail['role'] ) {
-        $exam_id = wpexams_ensure_user_exam_instance( $exam_id, get_current_user_id() );
+        // Check if this is the original predefined exam or already a user instance
+        $is_original = ! get_post_meta( $exam_id, 'wpexams_original_exam_id', true );
         
-        // Refresh exam data with user instance
-        $exam_data = wpexams_get_post_data( $exam_id );
+        if ( $is_original ) {
+            // This is the original predefined exam, create user instance
+            $exam_id = wpexams_ensure_user_exam_instance( $exam_id, get_current_user_id() );
+            
+            // Refresh exam data with user instance
+            $exam_data = wpexams_get_post_data( $exam_id );
+        }
     }
 
     // Verify user can access this exam
@@ -143,7 +150,10 @@ function wpexams_ajax_exam_navigation() {
         );
     }
 
-    // 6. Prepare response
+    // 6. Calculate progress percentage
+    $progress_percent = wpexams_calculate_progress( $target_question_id, $exam_data->exam_detail );
+
+    // 7. Prepare response
     $response = array(
         'action'            => 'show_question',
         'question_id'       => $target_question_id,
@@ -155,7 +165,7 @@ function wpexams_ajax_exam_navigation() {
         'all_question_ids'  => $exam_data->exam_detail['filtered_questions'],
         'show_prev'         => wpexams_should_show_prev( $target_question_id, $exam_data->exam_detail ),
         'show_next'         => wpexams_should_show_next( $target_question_id, $exam_data->exam_detail ),
-        'progress_percent'  => wpexams_calculate_progress( $target_question_id, $exam_data->exam_detail ),
+        'progress_percent'  => $progress_percent,
     );
 
     /**
@@ -169,7 +179,7 @@ add_action( 'wp_ajax_wpexams_exam_navigation', 'wpexams_ajax_exam_navigation' );
 add_action( 'wp_ajax_nopriv_wpexams_exam_navigation', 'wpexams_ajax_exam_navigation' );
 
 /**
- * FIXED: Ensure user has their own exam instance for predefined exams
+ * FIXED: Ensure user has their own exam instance for predefined exams (NO DUPLICATES)
  *
  * @since 1.0.0
  * @param int $original_exam_id Original predefined exam ID.
@@ -177,7 +187,7 @@ add_action( 'wp_ajax_nopriv_wpexams_exam_navigation', 'wpexams_ajax_exam_navigat
  * @return int User's exam instance ID.
  */
 function wpexams_ensure_user_exam_instance( $original_exam_id, $user_id ) {
-	// Check if user already has an in-progress instance of this exam
+	// Check if user already has ANY instance of this exam (completed or pending)
 	$existing_instances = get_posts(
 		array(
 			'post_type'      => 'wpexams_exam',
@@ -189,27 +199,51 @@ function wpexams_ensure_user_exam_instance( $original_exam_id, $user_id ) {
 					'key'   => 'wpexams_original_exam_id',
 					'value' => $original_exam_id,
 				),
-				array(
-					'key'     => 'wpexams_exam_status',
-					'value'   => 'completed',
-					'compare' => '!=',
-				),
 			),
+			'orderby'        => 'date',
+			'order'          => 'DESC',
 		)
 	);
 
-	// If exists, return that instance
+	// FIXED: If exists and it's NOT completed, return that instance
 	if ( ! empty( $existing_instances ) ) {
-		return $existing_instances[0]->ID;
+		$instance_id = $existing_instances[0]->ID;
+		$instance_result = get_post_meta( $instance_id, 'wpexams_exam_result', true );
+		
+		// If exam is not completed, reuse this instance
+		if ( isset( $instance_result['exam_status'] ) && 'completed' !== $instance_result['exam_status'] ) {
+			return $instance_id;
+		}
+		
+		// If completed, create a new instance (retake)
 	}
 
 	// Create a new user instance
 	$original_exam = get_post( $original_exam_id );
 	$exam_data     = wpexams_get_post_data( $original_exam_id );
 
+	// Count how many times user has taken this exam for numbering
+	$user_attempts = get_posts(
+		array(
+			'post_type'      => 'wpexams_exam',
+			'author'         => $user_id,
+			'posts_per_page' => -1,
+			'post_status'    => 'publish',
+			'meta_query'     => array(
+				array(
+					'key'   => 'wpexams_original_exam_id',
+					'value' => $original_exam_id,
+				),
+			),
+			'fields'         => 'ids',
+		)
+	);
+
+	$attempt_number = count( $user_attempts ) + 1;
+
 	$user_exam_id = wp_insert_post(
 		array(
-			'post_title'  => $original_exam->post_title . ' - ' . get_userdata( $user_id )->user_login,
+			'post_title'  => $original_exam->post_title . ' (Attempt #' . $attempt_number . ')',
 			'post_type'   => 'wpexams_exam',
 			'post_status' => 'publish',
 			'post_author' => $user_id,
@@ -238,8 +272,10 @@ function wpexams_ensure_user_exam_instance( $original_exam_id, $user_id ) {
 		'correct_answers'    => array(),
 		'wrong_answers'      => array(),
 		'question_times'     => array(),
+		'total_questions'    => isset( $exam_data->exam_detail['question_count'] ) ? $exam_data->exam_detail['question_count'] : count( $exam_data->exam_detail['filtered_questions'] ),
 	);
 	update_post_meta( $user_exam_id, 'wpexams_exam_result', $exam_result );
+	update_post_meta( $user_exam_id, 'wpexams_exam_status', 'Pending' );
 
 	return $user_exam_id;
 }
@@ -322,31 +358,40 @@ function wpexams_save_exam_answer( $exam_id, $question_id, $user_answer, $exam_t
 	$correct_option = $question_data->question_fields['correct_option'];
 	$is_correct     = ( $correct_option === 'wpexams_c_option_' . $user_answer );
 
-	// Update result
-	$result['solved_questions'][] = (string) $question_id;
-	$result['used_questions'][]   = (string) $question_id;
-	$result['question_times'][]   = array(
-		'question_id' => (string) $question_id,
-		'time'        => $question_time,
-	);
+	// Check if this question was already answered (prevent duplicates)
+	$already_answered = false;
+	if ( isset( $result['solved_questions'] ) && is_array( $result['solved_questions'] ) ) {
+		$already_answered = in_array( (string) $question_id, $result['solved_questions'], true );
+	}
 
-	if ( $is_correct ) {
-		$result['correct_answers'][] = array(
-			'question_id' => $question_id,
-			'answer'      => $user_answer,
+	// Only save if not already answered
+	if ( ! $already_answered ) {
+		// Update result
+		$result['solved_questions'][] = (string) $question_id;
+		$result['used_questions'][]   = (string) $question_id;
+		$result['question_times'][]   = array(
+			'question_id' => (string) $question_id,
+			'time'        => $question_time,
 		);
-	} else {
-		$result['wrong_answers'][] = array(
-			'question_id' => $question_id,
-			'answer'      => $user_answer,
-		);
+
+		if ( $is_correct ) {
+			$result['correct_answers'][] = array(
+				'question_id' => $question_id,
+				'answer'      => $user_answer,
+			);
+		} else {
+			$result['wrong_answers'][] = array(
+				'question_id' => $question_id,
+				'answer'      => $user_answer,
+			);
+		}
+
+		// Remove duplicates
+		$result['solved_questions'] = array_unique( $result['solved_questions'] );
+		$result['used_questions']   = array_unique( $result['used_questions'] );
 	}
 
 	$result['exam_time'] = $exam_time;
-
-	// Remove duplicates
-	$result['solved_questions'] = array_unique( $result['solved_questions'] );
-	$result['used_questions']   = array_unique( $result['used_questions'] );
 
 	// Set total questions if not set
 	if ( ! isset( $result['total_questions'] ) ) {

@@ -1,5 +1,5 @@
 /**
- * WP Exams - Exam Functionality (FIXED VERSION)
+ * WP Exams - Exam Functionality (FIXED VERSION - Issues #3 & #4)
  *
  * @package WPExams
  * @since 1.0.0
@@ -171,8 +171,10 @@
         // Update navigation buttons
         updateNavigationButtons(data, showImmediate, examId);
 
-        // Update progress
-        if (data.all_question_ids && data.question_id) {
+        // Update progress - FIXED: Use correct calculation
+        if (data.progress_percent !== undefined) {
+            updateProgressFromPercent(data.progress_percent, data.question_id, data.all_question_ids);
+        } else if (data.all_question_ids && data.question_id) {
             updateProgress(data.question_id, data.all_question_ids);
         }
     }
@@ -204,11 +206,8 @@
             const nextAction = isLastQuestion ? 'show_result' : 'next';
             nextBtn.setAttribute('onclick', `wpexamsNextQuestion('${data.question_id}', '${nextAction}', '${showImmediate}', '${examId}')`);
 
-            if (showImmediate === '1') {
-                nextBtn.classList.add("wpexams-hide");
-            } else {
-                nextBtn.classList.remove("wpexams-hide");
-            }
+            // Next button should be hidden initially (shown after submit)
+            nextBtn.classList.add("wpexams-hide");
         }
 
         // Exit button
@@ -216,8 +215,8 @@
             exitBtn.setAttribute('onclick', `wpexamsNextQuestion('${data.question_id}', 'exit', '${showImmediate}', '${examId}')`);
         }
 
-        // Submit button (for immediate feedback)
-        if (submitBtn && showImmediate === '1') {
+        // Submit button - should be visible
+        if (submitBtn) {
             submitBtn.classList.remove("wpexams-hide");
             submitBtn.setAttribute('onclick', `wpexamsSubmitAnswer('${data.question_id}', '${examId}')`);
         }
@@ -237,6 +236,10 @@
         const questionTime = document.getElementById("wpexams_question_timer").innerText;
         const examTime = document.getElementById("wpexams_exam_timer").innerText;
 
+        // Disable submit button
+        const submitBtn = document.getElementById("wpexamsSubmitQuestion");
+        if (submitBtn) submitBtn.disabled = true;
+
         $.ajax({
             url: wpexamsData.ajaxUrl,
             type: 'POST',
@@ -255,10 +258,12 @@
                     showImmediateAnswer(response.data);
                 } else {
                     alert(response.data.message || wpexamsData.strings.error);
+                    if (submitBtn) submitBtn.disabled = false;
                 }
             },
             error: function() {
                 alert(wpexamsData.strings.error);
+                if (submitBtn) submitBtn.disabled = false;
             }
         });
     };
@@ -315,12 +320,68 @@
             explanation.classList.remove("wpexams-hide");
         }
 
+        // Update progress bar - FIXED: Use progress_percent from response
+        if (data.progress_percent !== undefined) {
+            updateProgressFromPercent(data.progress_percent, null, null);
+        }
+
         // Show next button, hide submit button
         const nextBtn = document.getElementById("wpexamsNextQuestion");
         const submitBtn = document.getElementById("wpexamsSubmitQuestion");
         
         if (nextBtn) nextBtn.classList.remove("wpexams-hide");
         if (submitBtn) submitBtn.classList.add("wpexams-hide");
+    }
+
+    /**
+     * FIXED: Update progress from percentage value
+     */
+    function updateProgressFromPercent(percentage, currentId, allQuestionIds) {
+        const progressContainer = document.querySelector('.wpexams-exam-progress');
+        if (!progressContainer) return;
+
+        const progressEl = progressContainer.querySelector('.wpexams-progress');
+        const percentageEl = progressContainer.querySelector('.wpexams-percentage');
+        const progressNb = progressContainer.querySelector('.wpexams-question-progress-nb');
+
+        if (progressEl) progressEl.style.width = percentage + '%';
+        if (percentageEl) {
+            percentageEl.innerText = percentage + '%';
+        }
+
+        // Update question number if we have the IDs
+        if (currentId && allQuestionIds) {
+            let currentIndex = allQuestionIds.findIndex(id => parseInt(id) === parseInt(currentId));
+            if (currentIndex !== -1 && progressNb) {
+                progressNb.innerText = `${currentIndex + 1}/${allQuestionIds.length}`;
+            }
+        }
+    }
+
+    /**
+     * Update progress bar
+     */
+    function updateProgress(currentId, allQuestionIds) {
+        const progressContainer = document.querySelector('.wpexams-exam-progress');
+        if (!progressContainer) return;
+
+        let currentIndex = allQuestionIds.findIndex(id => parseInt(id) === parseInt(currentId));
+        
+        if (currentIndex === -1) currentIndex = 0;
+
+        const percentage = Math.round(((currentIndex + 1) / allQuestionIds.length) * 100);
+
+        const progressEl = progressContainer.querySelector('.wpexams-progress');
+        const percentageEl = progressContainer.querySelector('.wpexams-percentage');
+        const progressNb = progressContainer.querySelector('.wpexams-question-progress-nb');
+
+        if (progressEl) progressEl.style.width = percentage + '%';
+        if (percentageEl) {
+            percentageEl.innerText = percentage + '%';
+        }
+        if (progressNb) {
+            progressNb.innerText = `${currentIndex + 1}/${allQuestionIds.length}`;
+        }
     }
 
     /**
@@ -420,32 +481,6 @@
 
         // Scroll to result
         resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    /**
-     * Update progress bar
-     */
-    function updateProgress(currentId, allQuestionIds) {
-        const progressContainer = document.querySelector('.wpexams-exam-progress');
-        if (!progressContainer) return;
-
-        let currentIndex = allQuestionIds.findIndex(id => parseInt(id) === parseInt(currentId));
-        
-        if (currentIndex === -1) currentIndex = 0;
-
-        const percentage = Math.round(((currentIndex + 1) / allQuestionIds.length) * 100);
-
-        const progressEl = progressContainer.querySelector('.wpexams-progress');
-        const percentageEl = progressContainer.querySelector('.wpexams-percentage');
-        const progressNb = progressContainer.querySelector('.wpexams-question-progress-nb');
-
-        if (progressEl) progressEl.style.width = percentage + '%';
-        if (percentageEl) {
-            percentageEl.innerText = percentage + '%';
-        }
-        if (progressNb) {
-            progressNb.innerText = `${currentIndex + 1}/${allQuestionIds.length}`;
-        }
     }
 
     /**

@@ -1,8 +1,8 @@
 <?php
 /**
- * Exam Start Template (FIXED VERSION)
+ * Exam Start Template - FIXED VERSION (Issue #2)
  *
- * Display and handle exam taking interface
+ * Display and handle exam taking interface with consistent behavior
  *
  * @package WPExams
  * @since 1.0.0
@@ -46,10 +46,21 @@ if ( empty( $exam_detail ) ) {
 }
 
 // Check if exam should be resumed or started fresh
-if ( $exam_result && isset( $exam_result['solved_questions'] ) && 'admin_defined' !== $exam_detail['role'] && (int) $exam_result['user_id'] === $current_user_id ) {
-	// Resume pending exam
-	wpexams_load_template( 'exam-resume', compact( 'exam_id', 'exam_post', 'exam_result', 'exam_detail', 'current_user_id', 'question_time_seconds', 'show_progressbar' ) );
-	return;
+if ( $exam_result && isset( $exam_result['solved_questions'] ) && (int) $exam_result['user_id'] === $current_user_id ) {
+	// Check if it's a completed predefined exam - if so, show as new exam
+	if ( isset( $exam_detail['role'] ) && 'admin_defined' === $exam_detail['role'] && isset( $exam_result['exam_status'] ) && 'completed' === $exam_result['exam_status'] ) {
+		// This is a completed predefined exam, treat as new attempt
+		// Clear the exam_id to force new instance creation
+		unset( $_GET['wpexams_exam_id'] );
+		echo '<script>window.location.href = "' . esc_url( remove_query_arg( 'wpexams_exam_id' ) ) . '";</script>';
+		return;
+	}
+	
+	// Resume pending exam (only if not admin_defined)
+	if ( 'admin_defined' !== $exam_detail['role'] ) {
+		wpexams_load_template( 'exam-resume', compact( 'exam_id', 'exam_post', 'exam_result', 'exam_detail', 'current_user_id', 'question_time_seconds', 'show_progressbar' ) );
+		return;
+	}
 }
 
 // Get question count
@@ -79,6 +90,9 @@ $exam_time_seconds = 0;
 if ( '1' === $exam_detail['is_timed'] ) {
 	$exam_time_seconds = $question_time_seconds * $question_count;
 }
+
+// FIXED: Force show_answer_immediately to '1' for ALL exam types to ensure consistent behavior
+$show_answer_immediately = '1';
 
 ?>
 
@@ -150,32 +164,31 @@ if ( '1' === $exam_detail['is_timed'] ) {
 				<?php esc_html_e( 'Explanation:', 'wpexams' ); ?>
 			</div>
 
-			<?php if ( '1' === $exam_detail['show_answer_immediately'] ) : ?>
-				<div class='wpexams-text-right'>
-					<button id='wpexamsSubmitQuestion' 
-							class='wpexams-button wpexams-exam-button' 
-							onclick='wpexamsSubmitAnswer("<?php echo esc_js( $first_question_id ); ?>", "<?php echo esc_js( $exam_id ); ?>")'>
-						<?php esc_html_e( 'Submit', 'wpexams' ); ?>
-					</button>
-				</div>
-			<?php endif; ?>
+			<!-- FIXED: Always show Submit button for consistent behavior -->
+			<div class='wpexams-text-right'>
+				<button id='wpexamsSubmitQuestion' 
+						class='wpexams-button wpexams-exam-button' 
+						onclick='wpexamsSubmitAnswer("<?php echo esc_js( $first_question_id ); ?>", "<?php echo esc_js( $exam_id ); ?>")'>
+					<?php esc_html_e( 'Submit', 'wpexams' ); ?>
+				</button>
+			</div>
 
 			<div class='wpexams-text-center'>
 				<button id='wpexamsPrevQuestion' 
 						class='wpexams-button wpexams-exam-button wpexams-hide' 
-						onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', 'prev', '<?php echo esc_js( $exam_detail['show_answer_immediately'] ); ?>', '<?php echo esc_js( $exam_id ); ?>')">
+						onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', 'prev', '1', '<?php echo esc_js( $exam_id ); ?>')">
 					<?php esc_html_e( 'Previous', 'wpexams' ); ?>
 				</button>
 				
 				<button id='wpexamsNextQuestion' 
-						class='wpexams-button wpexams-exam-button <?php echo '1' === $exam_detail['show_answer_immediately'] ? 'wpexams-hide' : ''; ?>' 
-						onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', '<?php echo $question_count === 1 ? 'show_result' : 'next'; ?>', '<?php echo esc_js( $exam_detail['show_answer_immediately'] ); ?>', '<?php echo esc_js( $exam_id ); ?>')">
+						class='wpexams-button wpexams-exam-button wpexams-hide' 
+						onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', '<?php echo $question_count === 1 ? 'show_result' : 'next'; ?>', '1', '<?php echo esc_js( $exam_id ); ?>')">
 					<?php echo $question_count === 1 ? esc_html__( 'Show Result', 'wpexams' ) : esc_html__( 'Next', 'wpexams' ); ?>
 				</button>
 				
 				<button id='wpexamsExitExam' 
 						class='wpexams-button wpexams-exam-button' 
-						onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', 'exit', '<?php echo esc_js( $exam_detail['show_answer_immediately'] ); ?>', '<?php echo esc_js( $exam_id ); ?>')">
+						onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', 'exit', '1', '<?php echo esc_js( $exam_id ); ?>')">
 					<?php esc_html_e( 'Exit', 'wpexams' ); ?>
 				</button>
 			</div>
