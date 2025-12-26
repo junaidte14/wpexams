@@ -1,6 +1,6 @@
 <?php
 /**
- * Exam Start Template
+ * Exam Start Template (FIXED VERSION)
  *
  * Display and handle exam taking interface
  *
@@ -28,9 +28,6 @@ if ( ! $exam_post ) {
 	echo '<p>' . esc_html__( 'Exam not found.', 'wpexams' ) . '</p>';
 	return;
 }
-
-// Get admin IDs
-$admin_ids = wpexams_get_admin_ids();
 
 // Verify user can take this exam
 if ( ! wpexams_user_can_take_exam( $exam_id, $current_user_id ) ) {
@@ -123,69 +120,65 @@ if ( '1' === $exam_detail['is_timed'] ) {
 				</p>
 			</div>
 
-			<form action="javascript:void(0)">
-				<table class='wpexams-w-100'>
-					<tbody id='wpexams-questions-tbody-container' class='wpexams-questions-tbody-container'>
-						<div class='wpexams-exam-result wpexams-hide' id='wpexams-exam-result'></div>
-						
-						<?php if ( ! empty( $question_fields['options'] ) ) : ?>
-							<?php foreach ( $question_fields['options'] as $key => $option ) : ?>
-								<tr>
-									<td>
-										<label for="wpexams_question_option<?php echo intval( $key ) + 1; ?>">
-											<div>
-												<span class='wpexams-alpha-options'><?php echo intval( $key ) + 1; ?></span>
-												<input id='wpexams_question_option<?php echo intval( $key ) + 1; ?>' 
-													   type="radio" 
-													   name="wpexams_question_options" 
-													   value="<?php echo esc_attr( $key ); ?>" />
-												<?php echo esc_html( str_replace( '_', ' ', $option ) ); ?>
-											</div>
-										</label>
-									</td>
-								</tr>
-							<?php endforeach; ?>
-						<?php endif; ?>
-					</tbody>
-				</table>
+			<table class='wpexams-w-100'>
+				<tbody id='wpexams-questions-tbody-container' class='wpexams-questions-tbody-container'>
+					<!-- Result container (hidden initially) -->
+					<div class='wpexams-exam-result wpexams-hide' id='wpexams-exam-result'></div>
+					
+					<?php if ( ! empty( $question_fields['options'] ) ) : ?>
+						<?php foreach ( $question_fields['options'] as $key => $option ) : ?>
+							<tr>
+								<td>
+									<label for="wpexams_question_option<?php echo intval( $key ) + 1; ?>">
+										<div>
+											<span class='wpexams-alpha-options'><?php echo intval( $key ) + 1; ?></span>
+											<input id='wpexams_question_option<?php echo intval( $key ) + 1; ?>' 
+												   type="radio" 
+												   name="wpexams_question_options" 
+												   value="<?php echo esc_attr( $key ); ?>" />
+											<?php echo esc_html( str_replace( '_', ' ', $option ) ); ?>
+										</div>
+									</label>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					<?php endif; ?>
+				</tbody>
+			</table>
 
-				<div class='wpexams-hide wpexams-mb-20' id='wpexams-questions-explanation-immed'>
-					<?php esc_html_e( 'Explanation:', 'wpexams' ); ?>
-				</div>
+			<div class='wpexams-hide wpexams-mb-20' id='wpexams-questions-explanation-immed'>
+				<?php esc_html_e( 'Explanation:', 'wpexams' ); ?>
+			</div>
 
-				<?php if ( '1' === $exam_detail['show_answer_immediately'] ) : ?>
-					<div class='wpexams-text-right'>
-						<button id='wpexamsSubmitQuestion' class='wpexams-button wpexams-exam-button' 
-								onclick='wpexamsSubmitAnswer("<?php echo esc_js( $first_question_id ); ?>", "<?php echo esc_js( $exam_id ); ?>")'>
-							<?php esc_html_e( 'Submit', 'wpexams' ); ?>
-						</button>
-					</div>
-				<?php endif; ?>
-
-				<div class='wpexams-text-center'>
-					<button id="wpexamsPrevQuestion" 
-							class='wpexams-button wpexams-exam-button wpexams-hide' 
-							data-question="<?php echo esc_attr($first_question_id); ?>" 
-							data-action="prev" 
-							data-exam="<?php echo esc_attr($exam_id); ?>">
-						<?php esc_html_e( 'Previous', 'wpexams' ); ?>
-					</button>
-					<button id="wpexamsNextQuestion" 
-							class='wpexams-button wpexams-exam-button <?php echo '1' === $exam_detail['show_answer_immediately'] ? 'wpexams-hide' : ''; ?>' 
-							data-question="<?php echo esc_attr($first_question_id); ?>" 
-							data-action="next" 
-							data-exam="<?php echo esc_attr($exam_id); ?>">
-						<?php esc_html_e( 'Next', 'wpexams' ); ?>
-					</button>
-					<button id='wpexamsExitExam' 
+			<?php if ( '1' === $exam_detail['show_answer_immediately'] ) : ?>
+				<div class='wpexams-text-right'>
+					<button id='wpexamsSubmitQuestion' 
 							class='wpexams-button wpexams-exam-button' 
-							data-question="<?php echo esc_attr( $first_question_id ); ?>" 
-							data-action="exit" 
-							data-exam="<?php echo esc_attr( $exam_id ); ?>">
-						<?php esc_html_e( 'Exit', 'wpexams' ); ?>
+							onclick='wpexamsSubmitAnswer("<?php echo esc_js( $first_question_id ); ?>", "<?php echo esc_js( $exam_id ); ?>")'>
+						<?php esc_html_e( 'Submit', 'wpexams' ); ?>
 					</button>
 				</div>
-			</form>
+			<?php endif; ?>
+
+			<div class='wpexams-text-center'>
+				<button id='wpexamsPrevQuestion' 
+						class='wpexams-button wpexams-exam-button wpexams-hide' 
+						onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', 'prev', '<?php echo esc_js( $exam_detail['show_answer_immediately'] ); ?>', '<?php echo esc_js( $exam_id ); ?>')">
+					<?php esc_html_e( 'Previous', 'wpexams' ); ?>
+				</button>
+				
+				<button id='wpexamsNextQuestion' 
+						class='wpexams-button wpexams-exam-button <?php echo '1' === $exam_detail['show_answer_immediately'] ? 'wpexams-hide' : ''; ?>' 
+						onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', '<?php echo $question_count === 1 ? 'show_result' : 'next'; ?>', '<?php echo esc_js( $exam_detail['show_answer_immediately'] ); ?>', '<?php echo esc_js( $exam_id ); ?>')">
+					<?php echo $question_count === 1 ? esc_html__( 'Show Result', 'wpexams' ) : esc_html__( 'Next', 'wpexams' ); ?>
+				</button>
+				
+				<button id='wpexamsExitExam' 
+						class='wpexams-button wpexams-exam-button' 
+						onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', 'exit', '<?php echo esc_js( $exam_detail['show_answer_immediately'] ); ?>', '<?php echo esc_js( $exam_id ); ?>')">
+					<?php esc_html_e( 'Exit', 'wpexams' ); ?>
+				</button>
+			</div>
 		</div>
 	</div>
 </div>
@@ -203,10 +196,5 @@ jQuery(document).ready(function($) {
 	
 	// Initialize question timer
 	wpexamsQuestionCountdownTimer(0, 0, 0, "wpexamsQuestionTimer");
-	
-	// Initialize progress
-	if (typeof wpexamsSetPercentage === 'function') {
-		wpexamsSetPercentage();
-	}
 });
 </script>

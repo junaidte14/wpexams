@@ -1,5 +1,5 @@
 /**
- * WP Exams - Exam Functionality
+ * WP Exams - Exam Functionality (FIXED VERSION)
  *
  * @package WPExams
  * @since 1.0.0
@@ -7,18 +7,6 @@
 
 (function($) {
     'use strict';
-    console.log('file is loaded');
-
-    $(document).on('click', '#wpexamsNextQuestion, #wpexamsPrevQuestion, #wpexamsExitExam', function(e) {
-        e.preventDefault();
-        const btn = $(this);
-        const questionId = btn.data('question');
-        const action = btn.data('action');
-        const examId = btn.data('exam');
-        
-        // Call the logic
-        window.wpexamsNextQuestion(questionId, action, '0', examId);
-    });
 
     /**
      * Navigate to next/previous question
@@ -52,66 +40,38 @@
         if (nextBtn) nextBtn.disabled = true;
         if (prevBtn) prevBtn.disabled = true;
 
-        console.log(wpexamsData.nonce);
-        console.log(questionId);
-        console.log(action);
-        console.log(examId);
-        console.log(examTime);
-        console.log(questionTime);
-        console.log(userAnswer);
-        console.log(showImmediate);
-
-        const fd = new FormData();
-
-        // Core required fields
-        fd.append('action', 'wpexams_exam_navigation');
-        fd.append('nonce', wpexamsData.nonce);
-        fd.append('question_id', questionId);
-        fd.append('action_type', action);
-        fd.append('exam_id', examId);
-        fd.append('exam_time', examTime);
-        fd.append('question_time', questionTime);
-        fd.append('user_answer', userAnswer);
-        fd.append('show_immediate', showImmediate);
-        
-        fetch(wpexamsData.ajaxUrl, {
-            method: 'POST',
-            credentials: 'same-origin',
-            body: fd
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(response => {
-            console.log(response);
-            if (response.success) {
-                const data = response.data;
-                if (data.action === 'show_question') {
-                    handleNavigationSuccess(data, showImmediate, examId);
-                    // Update the buttons to use the NEW question ID for the next click
-                    $('#wpexamsNextQuestion, #wpexamsPrevQuestion, #wpexamsExitExam')
-                        .data('question', data.question_id)
-                        .attr('data-question', data.question_id); 
+        // Make AJAX request
+        $.ajax({
+            url: wpexamsData.ajaxUrl,
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'wpexams_exam_navigation',
+                nonce: wpexamsData.nonce,
+                question_id: questionId,
+                action_type: action,
+                exam_id: examId,
+                exam_time: examTime,
+                question_time: questionTime,
+                user_answer: userAnswer,
+                show_immediate: showImmediate
+            },
+            success: function(response) {
+                if (response.success) {
+                    handleNavigationSuccess(response.data, showImmediate, examId);
+                } else {
+                    alert(response.data.message || wpexamsData.strings.error);
                 }
-            } else {
-                alert(response.data.message || wpexamsData.strings.error);
+                
+                // Re-enable buttons
+                if (nextBtn) nextBtn.disabled = false;
+                if (prevBtn) prevBtn.disabled = false;
+            },
+            error: function() {
+                alert(wpexamsData.strings.error);
+                if (nextBtn) nextBtn.disabled = false;
+                if (prevBtn) prevBtn.disabled = false;
             }
-            
-            // Re-enable buttons
-            if (nextBtn) nextBtn.disabled = false;
-            if (prevBtn) prevBtn.disabled = false;
-        })
-        .catch(error => {
-            console.log(error);
-            alert(wpexamsData.strings.error);
-            if (nextBtn) nextBtn.disabled = false;
-            if (prevBtn) prevBtn.disabled = false;
-        })
-        .finally(() => {
-            //$('#wpwa-loading-overlay').fadeOut(200);
         });
     };
 
@@ -200,8 +160,8 @@
         updateNavigationButtons(data, showImmediate, examId);
 
         // Update progress
-        if (data.progress_percent !== undefined) {
-            updateProgress(data.current_id, data.all_question_ids, data.question_id);
+        if (data.all_question_ids && data.question_id) {
+            updateProgress(data.question_id, data.all_question_ids);
         }
     }
 
@@ -214,38 +174,24 @@
         const exitBtn = document.getElementById("wpexamsExitExam");
         const submitBtn = document.getElementById("wpexamsSubmitQuestion");
 
-        // Helper to update jQuery data and DOM attributes simultaneously
-        const updateBtnData = (el, qId, action) => {
-            if (!el) return;
-            el.setAttribute('data-question', qId);
-            el.setAttribute('data-action', action);
-            // Also update jQuery's internal cache if you use $(el).data()
-            jQuery(el).data('question', qId);
-            jQuery(el).data('action', action);
-        };
-
-        // 1. Handle Previous Button
+        // Previous button
         if (prevBtn) {
             if (data.show_prev) {
                 prevBtn.classList.remove("wpexams-hide");
-                updateBtnData(prevBtn, data.question_id, 'prev');
+                prevBtn.setAttribute('onclick', `wpexamsNextQuestion('${data.question_id}', 'prev', '${showImmediate}', '${examId}')`);
             } else {
                 prevBtn.classList.add("wpexams-hide");
             }
         }
 
-        // 2. Handle Next / Show Result Button
+        // Next button
         if (nextBtn) {
             const isLastQuestion = !data.show_next;
-            const nextAction = isLastQuestion ? 'show_result' : 'next';
-            
-            // Update Text
             nextBtn.textContent = isLastQuestion ? (wpexamsData.strings.showResult || 'Show Result') : (wpexamsData.strings.next || 'Next');
             
-            // Update Data Attributes
-            updateBtnData(nextBtn, data.question_id, nextAction);
+            const nextAction = isLastQuestion ? 'show_result' : 'next';
+            nextBtn.setAttribute('onclick', `wpexamsNextQuestion('${data.question_id}', '${nextAction}', '${showImmediate}', '${examId}')`);
 
-            // Visibility based on immediate feedback setting
             if (showImmediate === '1') {
                 nextBtn.classList.add("wpexams-hide");
             } else {
@@ -253,15 +199,15 @@
             }
         }
 
-        // 3. Handle Exit Button
+        // Exit button
         if (exitBtn) {
-            updateBtnData(exitBtn, data.question_id, 'exit');
+            exitBtn.setAttribute('onclick', `wpexamsNextQuestion('${data.question_id}', 'exit', '${showImmediate}', '${examId}')`);
         }
 
-        // 4. Handle Submit Button (for immediate feedback mode)
+        // Submit button (for immediate feedback)
         if (submitBtn && showImmediate === '1') {
             submitBtn.classList.remove("wpexams-hide");
-            updateBtnData(submitBtn, data.question_id, 'submit');
+            submitBtn.setAttribute('onclick', `wpexamsSubmitAnswer('${data.question_id}', '${examId}')`);
         }
     }
 
@@ -383,6 +329,12 @@
             wpexamsPauseTimer("wpexamsUntimedTimer", "wpexamsQuestionTimer");
         }
 
+        // Hide question area
+        const questionContainer = document.getElementById('wpexams-questions-tbody-container');
+        if (questionContainer) {
+            questionContainer.innerHTML = "";
+        }
+
         // Hide navigation buttons
         const nextBtn = document.getElementById("wpexamsNextQuestion");
         const prevBtn = document.getElementById("wpexamsPrevQuestion");
@@ -390,7 +342,7 @@
         if (prevBtn) prevBtn.remove();
 
         // Clear question title
-        const titleElement = document.getElementById("wpexams_exam_question_title");
+        const titleElement = document.getElementById("wpexams-exam-question-title");
         if (titleElement) titleElement.innerHTML = "";
 
         // Show result
@@ -413,17 +365,15 @@
     /**
      * Update progress bar
      */
-    function updateProgress(currentId, allQuestionIds, nextId) {
+    function updateProgress(currentId, allQuestionIds) {
         const progressContainer = document.querySelector('.wpexams-exam-progress');
         if (!progressContainer) return;
 
-        let currentIndex = allQuestionIds.indexOf(parseInt(currentId));
-        let nextIndex = allQuestionIds.indexOf(parseInt(nextId));
+        let currentIndex = allQuestionIds.findIndex(id => parseInt(id) === parseInt(currentId));
         
         if (currentIndex === -1) currentIndex = 0;
-        if (nextIndex === -1) nextIndex = currentIndex + 1;
 
-        const percentage = Math.round((nextIndex / allQuestionIds.length) * 100);
+        const percentage = Math.round(((currentIndex + 1) / allQuestionIds.length) * 100);
 
         const progressEl = progressContainer.querySelector('.wpexams-progress');
         const percentageEl = progressContainer.querySelector('.wpexams-percentage');
@@ -432,10 +382,9 @@
         if (progressEl) progressEl.style.width = percentage + '%';
         if (percentageEl) {
             percentageEl.innerText = percentage + '%';
-            percentageEl.style.left = percentage + '%';
         }
         if (progressNb) {
-            progressNb.innerText = `${nextIndex}/${allQuestionIds.length}`;
+            progressNb.innerText = `${currentIndex + 1}/${allQuestionIds.length}`;
         }
     }
 
@@ -472,7 +421,7 @@
      */
     function displayReviewQuestion(data, examId) {
         // Update title
-        const titleElement = document.getElementById("wpexams_exam_question_title");
+        const titleElement = document.getElementById("wpexams-exam-question-title");
         if (titleElement) {
             titleElement.innerHTML = data.question_title + ' <span class="wpexams-f-right">' + data.question_time + '</span>';
         }
@@ -486,6 +435,7 @@
         const explanation = document.getElementById("wpexams-questions-explanation-immed");
         if (explanation) {
             explanation.innerHTML = '<strong>Explanation:</strong> ' + data.explanation;
+            explanation.classList.remove("wpexams-hide");
         }
 
         // Add options
@@ -500,7 +450,6 @@
                 if (isSelected) tr.className = 'wpexams-subscriber-answer-sl';
                 
                 const td = document.createElement('td');
-                td.style.padding = '10px';
                 
                 const div = document.createElement('div');
                 div.style.display = 'flex';

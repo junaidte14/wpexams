@@ -83,6 +83,8 @@ function wpexams_exam_shortcode( $atts ) {
 			wpexams_load_template( 'exam-review', compact( 'current_user_id', 'question_time_seconds' ) );
 		} elseif ( isset( $_GET['wpexams_history'] ) ) {
 			wpexams_load_template( 'exam-history', compact( 'current_user_id', 'question_time_seconds' ) );
+		} elseif ( isset( $_GET['wpexams_new_exam'] ) ) {
+			wpexams_load_template( 'exam-new', compact( 'current_user_id' ) );
 		} else {
 			wpexams_load_template( 'exam-list-predefined', compact( 'current_user_id' ) );
 		}
