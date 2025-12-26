@@ -150,10 +150,7 @@ function wpexams_ajax_exam_navigation() {
         );
     }
 
-    // 6. Calculate progress percentage
-    $progress_percent = wpexams_calculate_progress( $target_question_id, $exam_data->exam_detail );
-
-    // 7. Prepare response
+    // 6. Prepare response
     $response = array(
         'action'            => 'show_question',
         'question_id'       => $target_question_id,
@@ -164,8 +161,7 @@ function wpexams_ajax_exam_navigation() {
         'description'       => $next_question_data->question_fields['description'],
         'all_question_ids'  => $exam_data->exam_detail['filtered_questions'],
         'show_prev'         => wpexams_should_show_prev( $target_question_id, $exam_data->exam_detail ),
-        'show_next'         => wpexams_should_show_next( $target_question_id, $exam_data->exam_detail ),
-        'progress_percent'  => $progress_percent,
+        'show_next'         => wpexams_should_show_next( $target_question_id, $exam_data->exam_detail )
     );
 
     /**

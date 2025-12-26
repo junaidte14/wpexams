@@ -92,7 +92,7 @@ if ( '1' === $exam_detail['is_timed'] ) {
 }
 
 // FIXED: Force show_answer_immediately to '1' for ALL exam types to ensure consistent behavior
-$show_answer_immediately = '1';
+$show_answer_immediately = isset( $exam_detail['show_answer_immediately'] ) ? $exam_detail['show_answer_immediately'] : '0';
 
 ?>
 
@@ -163,8 +163,7 @@ $show_answer_immediately = '1';
 			<div class='wpexams-hide wpexams-mb-20' id='wpexams-questions-explanation-immed'>
 				<?php esc_html_e( 'Explanation:', 'wpexams' ); ?>
 			</div>
-
-			<!-- FIXED: Always show Submit button for consistent behavior -->
+			
 			<div class='wpexams-text-right'>
 				<button id='wpexamsSubmitQuestion' 
 						class='wpexams-button wpexams-exam-button' 

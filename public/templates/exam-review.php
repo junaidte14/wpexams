@@ -96,19 +96,21 @@ $total_questions = $exam_result['total_questions'];
 					?>
 					<tr class='wpexams-question-field-show-immed <?php echo $is_selected ? 'wpexams-subscriber-answer-sl' : ''; ?>'>
 						<td>
-							<div style="display: flex;align-items: center;">
-								<span class='wpexams-alpha-options <?php echo $is_correct ? 'wpexams-green' : 'wpexams-red'; ?>'>
-									<?php echo intval( $key ) + 1; ?>
-								</span>
-								<span style="flex-grow:1;">
-									<?php echo esc_html( str_replace( '_', ' ', $option ) ); ?>
-								</span>
-								<?php if ( $is_correct ) : ?>
-									<span class="wpexams-immed-answer-is-true">✓</span>
-								<?php else : ?>
-									<span class="wpexams-immed-answer-is-false">✗</span>
-								<?php endif; ?>
-							</div>
+							<label for="">
+								<div>
+									<span class='wpexams-alpha-options <?php echo $is_correct ? 'wpexams-green' : 'wpexams-red'; ?>'>
+										<?php echo intval( $key ) + 1; ?>
+									</span>
+									<span style="flex-grow:1;">
+										<?php echo esc_html( str_replace( '_', ' ', $option ) ); ?>
+									</span>
+									<?php if ( $is_correct ) : ?>
+										<span class="wpexams-immed-answer-is-true">✓</span>
+									<?php else : ?>
+										<span class="wpexams-immed-answer-is-false">✗</span>
+									<?php endif; ?>
+								</div>
+							</label>
 						</td>
 					</tr>
 				<?php endforeach; ?>

@@ -171,12 +171,6 @@
         // Update navigation buttons
         updateNavigationButtons(data, showImmediate, examId);
 
-        // Update progress - FIXED: Use correct calculation
-        if (data.progress_percent !== undefined) {
-            updateProgressFromPercent(data.progress_percent, data.question_id, data.all_question_ids);
-        } else if (data.all_question_ids && data.question_id) {
-            updateProgress(data.question_id, data.all_question_ids);
-        }
     }
 
     /**
@@ -206,8 +200,14 @@
             const nextAction = isLastQuestion ? 'show_result' : 'next';
             nextBtn.setAttribute('onclick', `wpexamsNextQuestion('${data.question_id}', '${nextAction}', '${showImmediate}', '${examId}')`);
 
-            // Next button should be hidden initially (shown after submit)
-            nextBtn.classList.add("wpexams-hide");
+            // Next button visibility depends on show_immediate setting
+            if (showImmediate === '1') {
+                // If showing answers immediately, next button hidden until submit
+                nextBtn.classList.add("wpexams-hide");
+            } else {
+                // If not showing answers, next button always visible
+                nextBtn.classList.remove("wpexams-hide");
+            }
         }
 
         // Exit button
@@ -216,9 +216,13 @@
         }
 
         // Submit button - should be visible
-        if (submitBtn) {
+        if (submitBtn && showImmediate === '1') {
             submitBtn.classList.remove("wpexams-hide");
+            submitBtn.disabled = false; // CRITICAL: Re-enable button for next question
             submitBtn.setAttribute('onclick', `wpexamsSubmitAnswer('${data.question_id}', '${examId}')`);
+        } else if (submitBtn) {
+            // If not showing answers immediately, hide submit button
+            submitBtn.classList.add("wpexams-hide");
         }
     }
 
@@ -325,12 +329,18 @@
             updateProgressFromPercent(data.progress_percent, null, null);
         }
 
-        // Show next button, hide submit button
         const nextBtn = document.getElementById("wpexamsNextQuestion");
         const submitBtn = document.getElementById("wpexamsSubmitQuestion");
         
-        if (nextBtn) nextBtn.classList.remove("wpexams-hide");
-        if (submitBtn) submitBtn.classList.add("wpexams-hide");
+        if (nextBtn) {
+            nextBtn.classList.remove("wpexams-hide");
+            nextBtn.disabled = false; // Ensure next button is enabled
+        }
+        
+        if (submitBtn) {
+            submitBtn.classList.add("wpexams-hide");
+            submitBtn.disabled = true; // Disable submit for current question
+        }
     }
 
     /**
@@ -355,32 +365,6 @@
             if (currentIndex !== -1 && progressNb) {
                 progressNb.innerText = `${currentIndex + 1}/${allQuestionIds.length}`;
             }
-        }
-    }
-
-    /**
-     * Update progress bar
-     */
-    function updateProgress(currentId, allQuestionIds) {
-        const progressContainer = document.querySelector('.wpexams-exam-progress');
-        if (!progressContainer) return;
-
-        let currentIndex = allQuestionIds.findIndex(id => parseInt(id) === parseInt(currentId));
-        
-        if (currentIndex === -1) currentIndex = 0;
-
-        const percentage = Math.round(((currentIndex + 1) / allQuestionIds.length) * 100);
-
-        const progressEl = progressContainer.querySelector('.wpexams-progress');
-        const percentageEl = progressContainer.querySelector('.wpexams-percentage');
-        const progressNb = progressContainer.querySelector('.wpexams-question-progress-nb');
-
-        if (progressEl) progressEl.style.width = percentage + '%';
-        if (percentageEl) {
-            percentageEl.innerText = percentage + '%';
-        }
-        if (progressNb) {
-            progressNb.innerText = `${currentIndex + 1}/${allQuestionIds.length}`;
         }
     }
 
@@ -545,10 +529,8 @@
                 if (isSelected) tr.className = 'wpexams-subscriber-answer-sl';
                 
                 const td = document.createElement('td');
-                
+                const label = document.createElement('label');
                 const div = document.createElement('div');
-                div.style.display = 'flex';
-                div.style.alignItems = 'center';
                 
                 const span = document.createElement('span');
                 span.className = 'wpexams-alpha-options ' + (isCorrect ? 'wpexams-green' : 'wpexams-red');
@@ -565,7 +547,8 @@
                 div.appendChild(span);
                 div.appendChild(textSpan);
                 div.appendChild(feedback);
-                td.appendChild(div);
+                td.appendChild(label);
+                label.appendChild(div);
                 tr.appendChild(td);
                 container.appendChild(tr);
             });
