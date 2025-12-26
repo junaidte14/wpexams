@@ -37,8 +37,11 @@
         // Disable buttons during request
         const nextBtn = document.getElementById("wpexamsNextQuestion");
         const prevBtn = document.getElementById("wpexamsPrevQuestion");
+        const exitBtn = document.getElementById("wpexamsExitExam");
+        
         if (nextBtn) nextBtn.disabled = true;
         if (prevBtn) prevBtn.disabled = true;
+        if (exitBtn) exitBtn.disabled = true;
 
         // Make AJAX request
         $.ajax({
@@ -66,11 +69,13 @@
                 // Re-enable buttons
                 if (nextBtn) nextBtn.disabled = false;
                 if (prevBtn) prevBtn.disabled = false;
+                if (exitBtn) exitBtn.disabled = false;
             },
             error: function() {
                 alert(wpexamsData.strings.error);
                 if (nextBtn) nextBtn.disabled = false;
                 if (prevBtn) prevBtn.disabled = false;
+                if (exitBtn) exitBtn.disabled = false;
             }
         });
     };
@@ -85,7 +90,7 @@
         }
 
         if (data.action === 'show_result') {
-            displayExamResult(data);
+            displayExamResult(data, examId);
             return;
         }
 
@@ -111,6 +116,13 @@
         // Clear options container
         const container = document.getElementById('wpexams-questions-tbody-container');
         if (!container) return;
+        
+        // Hide result first
+        const resultContainer = document.getElementById('wpexams-exam-result');
+        if (resultContainer) {
+            resultContainer.classList.add('wpexams-hide');
+            resultContainer.classList.remove('wpexams-show');
+        }
         
         container.innerHTML = "";
 
@@ -312,54 +324,102 @@
     }
 
     /**
-     * Display exam result
+     * Display exam result - FIXED VERSION
      */
-    function displayExamResult(data) {
+    function displayExamResult(data, examId) {
         // Stop timers
-        const startTimer = document.getElementById("wpexams_start_timer");
-        if (startTimer) {
-            setTimeout(function() {
-                startTimer.classList.add("wpexams-d-none");
-            }, 1000);
-        }
+        const pauseBtn = document.getElementById("wpexams_pause_timer");
+        const startBtn = document.getElementById("wpexams_start_timer");
+        if (pauseBtn) pauseBtn.classList.add("wpexams-d-none");
+        if (startBtn) startBtn.classList.add("wpexams-d-none");
 
         if (window.wpexamsTimers['wpexamsTimedTimer']) {
-            wpexamsPauseTimer("wpexamsTimedTimer", "wpexamsQuestionTimer");
-        } else {
-            wpexamsPauseTimer("wpexamsUntimedTimer", "wpexamsQuestionTimer");
+            window.clearInterval(window.wpexamsTimers['wpexamsTimedTimer']);
+        }
+        if (window.wpexamsTimers['wpexamsUntimedTimer']) {
+            window.clearInterval(window.wpexamsTimers['wpexamsUntimedTimer']);
+        }
+        if (window.wpexamsTimers['wpexamsQuestionTimer']) {
+            window.clearInterval(window.wpexamsTimers['wpexamsQuestionTimer']);
         }
 
-        // Hide question area
+        // Hide question title
+        const titleElement = document.getElementById("wpexams-exam-question-title");
+        if (titleElement) titleElement.innerHTML = "";
+
+        // Clear question container
         const questionContainer = document.getElementById('wpexams-questions-tbody-container');
         if (questionContainer) {
             questionContainer.innerHTML = "";
         }
 
+        // Hide explanation
+        const explanation = document.getElementById("wpexams-questions-explanation-immed");
+        if (explanation) {
+            explanation.classList.add("wpexams-hide");
+        }
+
         // Hide navigation buttons
         const nextBtn = document.getElementById("wpexamsNextQuestion");
         const prevBtn = document.getElementById("wpexamsPrevQuestion");
-        if (nextBtn) nextBtn.remove();
-        if (prevBtn) prevBtn.remove();
+        const submitBtn = document.getElementById("wpexamsSubmitQuestion");
+        
+        if (nextBtn) nextBtn.style.display = 'none';
+        if (prevBtn) prevBtn.style.display = 'none';
+        if (submitBtn) submitBtn.style.display = 'none';
 
-        // Clear question title
-        const titleElement = document.getElementById("wpexams-exam-question-title");
-        if (titleElement) titleElement.innerHTML = "";
-
-        // Show result
-        const resultContainer = document.getElementById('wpexams-exam-result');
-        if (resultContainer) {
-            resultContainer.classList.add('wpexams-show');
-            resultContainer.classList.remove('wpexams-hide');
-            
-            // Add score
-            const correctCount = data.result.correct_count || 0;
-            const totalCount = data.result.total_count || 0;
-            
-            let html = `<h5>Score ${correctCount}/${totalCount}</h5>`;
-            html += `<a class='wpexams-f-right' href='?wpexams_review_id=${data.exam_id}'>Review</a>`;
-            
-            resultContainer.innerHTML = html;
+        // Get or create result container
+        let resultContainer = document.getElementById('wpexams-exam-result');
+        if (!resultContainer) {
+            resultContainer = document.createElement('div');
+            resultContainer.id = 'wpexams-exam-result';
+            resultContainer.className = 'wpexams-exam-result';
+            if (questionContainer && questionContainer.parentNode) {
+                questionContainer.parentNode.insertBefore(resultContainer, questionContainer);
+            }
         }
+
+        // Calculate score
+        const correctCount = data.result.correct_count || 0;
+        const totalCount = data.result.total_count || 0;
+        const percentage = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+        const examTime = data.result.exam_time || '00:00:00';
+
+        // Build result HTML
+        let html = '<div style="background: #fff; padding: 30px; border: 1px solid #ddd; border-radius: 8px; text-align: center; margin: 20px 0;">';
+        html += '<h2 style="color: #333; margin: 0 0 20px 0;">' + (wpexamsData.strings.examCompleted || 'Exam Completed!') + '</h2>';
+        html += '<div style="background: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0;">';
+        html += '<div style="font-size: 48px; font-weight: bold; color: ' + (percentage >= 50 ? '#4caf50' : '#f44336') + ';">' + percentage + '%</div>';
+        html += '<div style="font-size: 24px; margin: 10px 0; color: #555;">Score: ' + correctCount + '/' + totalCount + '</div>';
+        
+        if (examTime !== 'expired') {
+            html += '<div style="font-size: 18px; color: #666;">Time: ' + examTime + '</div>';
+        } else {
+            html += '<div style="font-size: 18px; color: #f44336;">Time Expired</div>';
+        }
+        
+        html += '</div>';
+        
+        // Action buttons
+        html += '<div style="margin-top: 30px;">';
+        html += '<a href="?wpexams_review_id=' + examId + '" class="wpexams-button wpexams-exam-button" style="margin: 5px; text-decoration: none; display: inline-block;">';
+        html += (wpexamsData.strings.reviewAnswers || 'Review Answers');
+        html += '</a>';
+        html += '<a href="?wpexams_history" class="wpexams-button wpexams-exam-button" style="margin: 5px; text-decoration: none; display: inline-block;">';
+        html += (wpexamsData.strings.viewHistory || 'View History');
+        html += '</a>';
+        html += '<button onclick="wpexamsExitExam()" class="wpexams-button wpexams-exam-button" style="margin: 5px;">';
+        html += (wpexamsData.strings.backToHome || 'Back to Home');
+        html += '</button>';
+        html += '</div>';
+        html += '</div>';
+
+        resultContainer.innerHTML = html;
+        resultContainer.classList.add('wpexams-show');
+        resultContainer.classList.remove('wpexams-hide');
+
+        // Scroll to result
+        resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     /**

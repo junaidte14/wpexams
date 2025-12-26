@@ -1,6 +1,6 @@
 <?php
 /**
- * Exam navigation AJAX handler
+ * Exam navigation AJAX handler - FIXED VERSION
  *
  * Handles next/previous question navigation with full security
  *
@@ -54,15 +54,6 @@ function wpexams_ajax_exam_navigation() {
     $user_answer    = isset( $_POST['user_answer'] ) ? sanitize_key( $_POST['user_answer'] ) : 'null';
     $show_immediate = isset( $_POST['show_immediate'] ) ? '1' : '0';
 
-    // Verify user can access this exam
-    if ( ! wpexams_user_can_take_exam( $exam_id ) ) {
-        wp_send_json_error(
-            array(
-                'message' => __( 'You do not have permission to access this exam.', 'wpexams' ),
-            )
-        );
-    }
-
     // Get exam data
     $exam_data = wpexams_get_post_data( $exam_id );
 
@@ -70,6 +61,23 @@ function wpexams_ajax_exam_navigation() {
         wp_send_json_error(
             array(
                 'message' => __( 'Exam data not found.', 'wpexams' ),
+            )
+        );
+    }
+
+    // FIXED: For predefined (admin_defined) exams, create a user-specific exam instance
+    if ( isset( $exam_data->exam_detail['role'] ) && 'admin_defined' === $exam_data->exam_detail['role'] ) {
+        $exam_id = wpexams_ensure_user_exam_instance( $exam_id, get_current_user_id() );
+        
+        // Refresh exam data with user instance
+        $exam_data = wpexams_get_post_data( $exam_id );
+    }
+
+    // Verify user can access this exam
+    if ( ! wpexams_user_can_take_exam( $exam_id ) ) {
+        wp_send_json_error(
+            array(
+                'message' => __( 'You do not have permission to access this exam.', 'wpexams' ),
             )
         );
     }
@@ -161,6 +169,82 @@ add_action( 'wp_ajax_wpexams_exam_navigation', 'wpexams_ajax_exam_navigation' );
 add_action( 'wp_ajax_nopriv_wpexams_exam_navigation', 'wpexams_ajax_exam_navigation' );
 
 /**
+ * FIXED: Ensure user has their own exam instance for predefined exams
+ *
+ * @since 1.0.0
+ * @param int $original_exam_id Original predefined exam ID.
+ * @param int $user_id          User ID.
+ * @return int User's exam instance ID.
+ */
+function wpexams_ensure_user_exam_instance( $original_exam_id, $user_id ) {
+	// Check if user already has an in-progress instance of this exam
+	$existing_instances = get_posts(
+		array(
+			'post_type'      => 'wpexams_exam',
+			'author'         => $user_id,
+			'posts_per_page' => 1,
+			'post_status'    => 'publish',
+			'meta_query'     => array(
+				array(
+					'key'   => 'wpexams_original_exam_id',
+					'value' => $original_exam_id,
+				),
+				array(
+					'key'     => 'wpexams_exam_status',
+					'value'   => 'completed',
+					'compare' => '!=',
+				),
+			),
+		)
+	);
+
+	// If exists, return that instance
+	if ( ! empty( $existing_instances ) ) {
+		return $existing_instances[0]->ID;
+	}
+
+	// Create a new user instance
+	$original_exam = get_post( $original_exam_id );
+	$exam_data     = wpexams_get_post_data( $original_exam_id );
+
+	$user_exam_id = wp_insert_post(
+		array(
+			'post_title'  => $original_exam->post_title . ' - ' . get_userdata( $user_id )->user_login,
+			'post_type'   => 'wpexams_exam',
+			'post_status' => 'publish',
+			'post_author' => $user_id,
+		)
+	);
+
+	if ( is_wp_error( $user_exam_id ) ) {
+		return $original_exam_id; // Fallback to original
+	}
+
+	// Copy exam detail
+	$exam_detail = $exam_data->exam_detail;
+	$exam_detail['original_exam_id'] = $original_exam_id;
+	$exam_detail['user_id'] = $user_id;
+	
+	update_post_meta( $user_exam_id, 'wpexams_exam_detail', $exam_detail );
+	update_post_meta( $user_exam_id, 'wpexams_original_exam_id', $original_exam_id );
+
+	// Initialize exam result
+	$exam_result = array(
+		'filtered_questions' => $exam_data->exam_detail['filtered_questions'],
+		'user_id'            => $user_id,
+		'exam_status'        => 'pending',
+		'solved_questions'   => array(),
+		'used_questions'     => array(),
+		'correct_answers'    => array(),
+		'wrong_answers'      => array(),
+		'question_times'     => array(),
+	);
+	update_post_meta( $user_exam_id, 'wpexams_exam_result', $exam_result );
+
+	return $user_exam_id;
+}
+
+/**
  * Get next question ID based on action
  *
  * @since 1.0.0
@@ -236,7 +320,7 @@ function wpexams_save_exam_answer( $exam_id, $question_id, $user_answer, $exam_t
 
 	// Determine if answer is correct
 	$correct_option = $question_data->question_fields['correct_option'];
-	$is_correct     = ( $correct_option === $user_answer );
+	$is_correct     = ( $correct_option === 'wpexams_c_option_' . $user_answer );
 
 	// Update result
 	$result['solved_questions'][] = (string) $question_id;
@@ -263,6 +347,12 @@ function wpexams_save_exam_answer( $exam_id, $question_id, $user_answer, $exam_t
 	// Remove duplicates
 	$result['solved_questions'] = array_unique( $result['solved_questions'] );
 	$result['used_questions']   = array_unique( $result['used_questions'] );
+
+	// Set total questions if not set
+	if ( ! isset( $result['total_questions'] ) ) {
+		$exam_detail = wpexams_get_post_data( $exam_id )->exam_detail;
+		$result['total_questions'] = isset( $exam_detail['question_count'] ) ? $exam_detail['question_count'] : count( $exam_detail['filtered_questions'] );
+	}
 
 	/**
 	 * Fires after answer is saved
@@ -315,15 +405,24 @@ function wpexams_generate_exam_result( $exam_id, $exam_time ) {
 	$result['exam_time']   = $exam_time;
 
 	// Calculate score
-	$correct_count = count( $result['correct_answers'] );
-	$total_count   = count( $result['filtered_questions'] );
-	$percentage    = $total_count > 0 ? ( $correct_count / $total_count ) * 100 : 0;
+	$correct_count = 0;
+	if ( isset( $result['correct_answers'] ) && is_array( $result['correct_answers'] ) ) {
+		foreach ( $result['correct_answers'] as $answer ) {
+			if ( isset( $answer['answer'] ) && 'null' !== $answer['answer'] ) {
+				$correct_count++;
+			}
+		}
+	}
+
+	$total_count = isset( $result['total_questions'] ) ? $result['total_questions'] : count( $result['filtered_questions'] );
+	$percentage  = $total_count > 0 ? ( $correct_count / $total_count ) * 100 : 0;
 
 	$result['score_percentage'] = round( $percentage, 2 );
 	$result['correct_count']    = $correct_count;
 	$result['total_count']      = $total_count;
 
 	update_post_meta( $exam_id, 'wpexams_exam_result', $result );
+	update_post_meta( $exam_id, 'wpexams_exam_status', 'Completed' );
 
 	/**
 	 * Fires when exam is completed

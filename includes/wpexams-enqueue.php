@@ -1,6 +1,6 @@
 <?php
 /**
- * Enqueue scripts and styles
+ * Enqueue scripts and styles - UPDATED VERSION
  *
  * @package WPExams
  * @since 1.0.0
@@ -61,7 +61,7 @@ function wpexams_enqueue_frontend_scripts() {
 		true
 	);
 
-	// Localize script
+	// Localize script with all necessary strings
 	wp_localize_script(
 		'wpexams-exam',
 		'wpexamsData',
@@ -69,14 +69,18 @@ function wpexams_enqueue_frontend_scripts() {
 			'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
 			'nonce'         => wp_create_nonce( 'wpexams_nonce' ),
 			'strings'       => array(
-				'confirmExit'   => __( 'Your exam is not finished. Exit now and complete later?', 'wpexams' ),
-				'loading'       => __( 'Loading...', 'wpexams' ),
-				'error'         => __( 'An error occurred. Please try again.', 'wpexams' ),
-				'timeExpired'   => __( 'Time has expired!', 'wpexams' ),
-				'confirmReset'  => __( 'Are you sure you want to reset the question bank? This will clear the history of used questions.', 'wpexams' ),
-				'next'          => __( 'Next', 'wpexams' ),
-				'showResult'    => __( 'Show Result', 'wpexams' ),
-				'previous'      => __( 'Previous', 'wpexams' ),
+				'confirmExit'       => __( 'Your exam is not finished. Exit now and complete later?', 'wpexams' ),
+				'loading'           => __( 'Loading...', 'wpexams' ),
+				'error'             => __( 'An error occurred. Please try again.', 'wpexams' ),
+				'timeExpired'       => __( 'Time has expired!', 'wpexams' ),
+				'confirmReset'      => __( 'Are you sure you want to reset the question bank? This will clear the history of used questions.', 'wpexams' ),
+				'next'              => __( 'Next', 'wpexams' ),
+				'showResult'        => __( 'Show Result', 'wpexams' ),
+				'previous'          => __( 'Previous', 'wpexams' ),
+				'examCompleted'     => __( 'Exam Completed!', 'wpexams' ),
+				'reviewAnswers'     => __( 'Review Answers', 'wpexams' ),
+				'viewHistory'       => __( 'View History', 'wpexams' ),
+				'backToHome'        => __( 'Back to Home', 'wpexams' ),
 			),
 		)
 	);

@@ -1,9 +1,16 @@
 /**
- * WP Exams Frontend Styles - Fixed Version
+ * WP Exams Frontend Styles - FIXED VERSION
  *
  * @package WPExams
  * @since 1.0.0
  */
+
+/* ============================================
+   RESET & BOX SIZING
+   ============================================ */
+* {
+    box-sizing: border-box;
+}
 
 /* ============================================
    UTILITY CLASSES
@@ -73,6 +80,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .wpexams-text-center {
@@ -96,13 +104,22 @@
 }
 
 /* ============================================
-   MAIN CONTAINER
+   MAIN CONTAINER - FIXED
    ============================================ */
 .wpexams-main,
 .wpexams-content {
     max-width: 1200px;
+    width: 100%;
     margin: 20px auto;
     padding: 0 20px;
+    box-sizing: border-box;
+}
+
+/* Ensure no overflow */
+.wpexams-main *,
+.wpexams-content * {
+    box-sizing: border-box;
+    max-width: 100%;
 }
 
 /* ============================================
@@ -116,6 +133,7 @@
     padding: 20px;
     background: #f9f9f9;
     border-radius: 8px;
+    box-sizing: border-box;
 }
 
 .wpexams-header-left {
@@ -128,6 +146,7 @@
 .wpexams-header-left img {
     border-radius: 50%;
     max-width: 80px;
+    width: 80px;
     height: 80px;
     object-fit: cover;
     border: 3px solid #ddd;
@@ -154,6 +173,7 @@
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 8px;
+    box-sizing: border-box;
 }
 
 .wpexams-menu-link,
@@ -165,6 +185,7 @@
     transition: all 0.3s ease;
     font-size: 14px;
     font-weight: 500;
+    box-sizing: border-box;
 }
 
 .wpexams-menu-link:hover,
@@ -188,6 +209,7 @@
     border-radius: 4px;
     transition: all 0.3s ease;
     margin: 5px;
+    box-sizing: border-box;
 }
 
 .wpexams-button:hover:not(:disabled),
@@ -208,11 +230,13 @@
 .wpexams-data-table {
     border-collapse: collapse;
     width: 100%;
+    max-width: 100%;
     margin: 25px 0;
     background: #fff;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     border-radius: 8px;
     overflow: hidden;
+    box-sizing: border-box;
 }
 
 .wpexams-data-table th,
@@ -220,6 +244,7 @@
     padding: 15px;
     text-align: left;
     border-bottom: 1px solid #ddd;
+    word-wrap: break-word;
 }
 
 .wpexams-data-table th {
@@ -240,13 +265,14 @@
 }
 
 .wpexams-data-table td {
-    text-align: center;
+    text-align: left;
 }
 
 .wpexams-data-table a {
     color: #0073aa;
     text-decoration: none;
     font-weight: 500;
+    word-break: break-word;
 }
 
 .wpexams-data-table a:hover {
@@ -258,6 +284,8 @@
    ============================================ */
 .wpexams-exam-question-content-main {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .wpexams-exam-question-content {
@@ -267,6 +295,8 @@
     border-radius: 8px;
     margin: 20px 0;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+    width: 100%;
 }
 
 #wpexams-question-head {
@@ -281,6 +311,7 @@
     margin: 0;
     color: #333;
     line-height: 1.5;
+    word-wrap: break-word;
 }
 
 /* ============================================
@@ -288,6 +319,7 @@
    ============================================ */
 .wpexams-questions-tbody-container {
     width: 100%;
+    max-width: 100%;
 }
 
 .wpexams-questions-tbody-container tr {
@@ -307,6 +339,7 @@
     border-radius: 6px;
     transition: all 0.2s ease;
     background: #fff;
+    box-sizing: border-box;
 }
 
 .wpexams-questions-tbody-container label:hover {
@@ -375,6 +408,7 @@
     border-left: 4px solid #2196f3;
     border-radius: 4px;
     margin-top: 20px;
+    box-sizing: border-box;
 }
 
 /* ============================================
@@ -385,6 +419,7 @@
     padding: 15px;
     background: #f8f9fa;
     border-radius: 8px;
+    box-sizing: border-box;
 }
 
 .wpexams-exam-progress p {
@@ -401,6 +436,7 @@
     position: relative;
     overflow: hidden;
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    box-sizing: border-box;
 }
 
 .wpexams-progress {
@@ -456,86 +492,84 @@
 }
 
 /* ============================================
-   EXAM RESULT ACCORDION
+   EXAM RESULT - FIXED
    ============================================ */
 .wpexams-exam-result {
     margin: 20px 0;
     background: #fff;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-#wpexamsAccordion {
-    margin: 0;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    box-sizing: border-box;
+    width: 100%;
     overflow: hidden;
 }
 
-#wpexamsAccordion h3 {
-    font-size: 16px;
-    line-height: 1.4;
+/* Accordion styles */
+.wpexams-accordion-container {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.wpexams-accordion-trigger {
     padding: 15px 20px;
-    margin: 0;
+    background: #f8f9fa;
     cursor: pointer;
     transition: background-color 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
 }
 
-#wpexamsAccordion div {
-    cursor: pointer;
+.wpexams-accordion-trigger:hover {
+    background: #e9ecef;
 }
 
-#wpexamsAccordion p {
+.wpexams-accordion-trigger h3 {
     margin: 0;
-}
-
-#wpexamsAccordion li {
-    list-style: none;
-}
-
-#wpexamsAccordion ul {
-    margin: 0;
-    padding: 0;
-}
-
-#wpexamsAccordion ul ul {
-    display: none;
-    background: #f9f9f9;
-    border-top: 1px solid #ddd;
-}
-
-#wpexamsAccordion ul ul li a {
+    font-size: 16px;
+    font-weight: 600;
     color: #333;
-    text-decoration: none;
-    line-height: 1.6;
+    flex: 1;
+}
+
+.wpexams-accordion-trigger p {
+    margin: 0;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 20px;
-    transition: all 0.15s;
+    gap: 10px;
+    font-size: 14px;
+    color: #666;
 }
 
-#wpexamsAccordion ul ul li a:hover {
-    background-color: #eee;
+.wpexams-accordion-arrow {
+    transition: transform 0.3s ease;
+    display: inline-block;
+    font-size: 12px;
 }
 
-#wpexamsAccordion .wpexams-alpha-options {
-    min-width: 30px;
-    height: 30px;
-    font-size: 13px;
+.wpexams-accordion-content {
+    padding: 20px;
+    background: #fff;
 }
 
+/* Result header alternative style */
 .wpexams-result-header {
-    padding: 0 20px;
+    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: #f8f9fa;
     border-bottom: 1px solid #ddd;
+    cursor: pointer;
 }
 
 .wpexams-result-header h3 {
     flex: 1;
+    margin: 0;
+    font-size: 16px;
 }
 
 .wpexams-result-header p {
@@ -544,6 +578,7 @@
     gap: 10px;
     font-size: 14px;
     color: #666;
+    margin: 0;
 }
 
 /* ============================================
@@ -555,6 +590,7 @@
     background: #f8f9fa;
     border-radius: 8px;
     border: 1px solid #ddd;
+    box-sizing: border-box;
 }
 
 .wpexams-login-message p {
@@ -564,12 +600,56 @@
 }
 
 /* ============================================
+   FORM STYLES
+   ============================================ */
+.wpexams-category-content {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+}
+
+.wpexams-category-content p {
+    margin-top: 0;
+}
+
+.wpexams-category-content input[type="checkbox"],
+.wpexams-category-content input[type="radio"] {
+    margin-right: 8px;
+}
+
+.wpexams-category-content label {
+    margin-right: 15px;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.wpexams-q-number-content,
+.wpexams-timed-content,
+.wpexams-answer-show-immed-content {
+    margin: 20px 0;
+    box-sizing: border-box;
+}
+
+.wpexams-q-numbers-field {
+    width: 100%;
+    max-width: 300px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 @media (max-width: 780px) {
     .wpexams-main,
     .wpexams-content {
-        padding: 0 10px;
+        padding: 0 15px;
     }
 
     .wpexams-head-menus-links {
@@ -582,6 +662,7 @@
         font-size: 13px;
         padding: 10px 16px;
         text-align: center;
+        width: 100%;
     }
 
     .wpexams-exam-question-content {
@@ -591,6 +672,8 @@
     .wpexams-exam-button {
         font-size: 13px;
         padding: 10px 16px;
+        width: 100%;
+        margin: 5px 0;
     }
 
     .wpexams-d-flex {
@@ -650,11 +733,16 @@
         height: 30px;
         font-size: 12px;
     }
+    
+    .wpexams-accordion-trigger h3 {
+        font-size: 14px;
+    }
 }
 
 @media (max-width: 480px) {
     .wpexams-header-left img {
         max-width: 60px;
+        width: 60px;
         height: 60px;
     }
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Exam History Template
+ * Exam History Template - FIXED VERSION
  *
  * Display user's exam history with scores and options to review
  *
@@ -55,8 +55,10 @@ if ( isset( $_GET['wpexams_history_id'] ) ) {
 		</div>
 
 		<?php if ( isset( $exam_result['filtered_questions'] ) ) : ?>
+			<?php $question_index = 0; ?>
 			<?php foreach ( $exam_result['filtered_questions'] as $question_id ) : ?>
 				<?php
+				$question_index++;
 				$question_data = wpexams_get_post_data( $question_id );
 				$question_fields = $question_data->question_fields;
 
@@ -68,45 +70,67 @@ if ( isset( $_GET['wpexams_history_id'] ) ) {
 				?>
 
 				<div class="wpexams-exam-result wpexams-show">
-					<div id="wpexamsAccordion">
-						<ul class="wpexams-m-0">
-							<li>
-								<div class="wpexams-result-header">
-									<h3><?php echo esc_html( get_the_title( $question_id ) ); ?></h3>
-									<p><span><?php echo esc_html( $question_time ); ?></span> ⮟</p>
+					<div class="wpexams-accordion-container">
+						<div class="wpexams-result-header wpexams-accordion-trigger" data-question-index="<?php echo esc_attr( $question_index ); ?>">
+							<h3><?php echo esc_html( get_the_title( $question_id ) ); ?></h3>
+							<p><span><?php echo esc_html( $question_time ); ?></span> <span class="wpexams-accordion-arrow">▼</span></p>
+						</div>
+						<div class="wpexams-accordion-content" data-question-index="<?php echo esc_attr( $question_index ); ?>" style="display: none;">
+							<?php foreach ( $question_fields['options'] as $key => $option ) : ?>
+								<?php
+								$is_correct  = ( 'wpexams_c_option_' . $key === $question_fields['correct_option'] );
+								$is_selected = ( $key == $user_answer );
+								?>
+								<a href="javascript:void(0)" 
+								   style="display: flex;align-items: center;padding: 12px;margin: 5px 0;border: 2px solid #ddd;border-radius: 6px;text-decoration: none;transition: all 0.2s;" 
+								   class="<?php echo $is_selected ? 'wpexams-subscriber-answer-sl' : ''; ?>">
+									<span class="wpexams-alpha-options <?php echo $is_correct ? 'wpexams-green' : 'wpexams-red'; ?>">
+										<?php echo intval( $key ) + 1; ?>
+									</span>
+									<span style="flex-grow:1;margin-left: 10px;color: #333;">
+										<?php echo esc_html( str_replace( '_', ' ', $option ) ); ?>
+									</span>
+									<?php if ( $is_correct ) : ?>
+										<span class="wpexams-immed-answer-is-true">✓</span>
+									<?php else : ?>
+										<span class="wpexams-immed-answer-is-false">✗</span>
+									<?php endif; ?>
+								</a>
+							<?php endforeach; ?>
+							
+							<?php if ( ! empty( $question_fields['description'] ) ) : ?>
+								<div style="background: #f8f9fa;padding: 15px;border-left: 4px solid #2196f3;border-radius: 4px;margin-top: 15px;">
+									<strong><?php esc_html_e( 'Explanation:', 'wpexams' ); ?></strong>
+									<p style="margin: 5px 0 0 0;"><?php echo esc_html( $question_fields['description'] ); ?></p>
 								</div>
-								<ul class="wpexams-m-0 wpexams-d-none">
-									<li>
-										<?php foreach ( $question_fields['options'] as $key => $option ) : ?>
-											<?php
-											$is_correct  = ( 'wpexams_c_option_' . $key === $question_fields['correct_option'] );
-											$is_selected = ( $key == $user_answer );
-											?>
-											<a href="javascript:(0)" 
-											   style="display: flex;align-items: center;" 
-											   class="<?php echo $is_selected ? 'wpexams-subscriber-answer-sl' : ''; ?>">
-												<span class="wpexams-alpha-options <?php echo $is_correct ? 'wpexams-green' : 'wpexams-red'; ?>">
-													<?php echo intval( $key ) + 1; ?>
-												</span>
-												<span style="flex-grow:1;">
-													<?php echo esc_html( str_replace( '_', ' ', $option ) ); ?>
-												</span>
-												<?php if ( $is_correct ) : ?>
-													<span class="wpexams-immed-answer-is-true">✓</span>
-												<?php else : ?>
-													<span class="wpexams-immed-answer-is-false">✗</span>
-												<?php endif; ?>
-											</a>
-										<?php endforeach; ?>
-									</li>
-								</ul>
-							</li>
-						</ul>
+							<?php endif; ?>
+						</div>
 					</div>
 				</div>
 			<?php endforeach; ?>
 		<?php endif; ?>
 	</div>
+	
+	<script>
+	jQuery(document).ready(function($) {
+		// Accordion functionality
+		$('.wpexams-accordion-trigger').on('click', function() {
+			var questionIndex = $(this).data('question-index');
+			var content = $('.wpexams-accordion-content[data-question-index="' + questionIndex + '"]');
+			var arrow = $(this).find('.wpexams-accordion-arrow');
+			
+			// Toggle content
+			content.slideToggle(300);
+			
+			// Rotate arrow
+			if (content.is(':visible')) {
+				arrow.css('transform', 'rotate(180deg)');
+			} else {
+				arrow.css('transform', 'rotate(0deg)');
+			}
+		});
+	});
+	</script>
 	<?php
 	return;
 }
@@ -115,10 +139,10 @@ if ( isset( $_GET['wpexams_history_id'] ) ) {
 ?>
 
 <div class="wpexams-content">
-	<p><?php esc_html_e( 'History of exams that you have created.', 'wpexams' ); ?></p>
+	<p><?php esc_html_e( 'History of exams that you have taken.', 'wpexams' ); ?></p>
 
 	<?php
-	// Get user's exams
+	// Get user's exams - FIXED: Show both user_defined and admin_defined exams that have been completed
 	$user_exams = new WP_Query(
 		array(
 			'post_type'      => 'wpexams_exam',
@@ -152,8 +176,9 @@ if ( isset( $_GET['wpexams_history_id'] ) ) {
 					$exam_result = $exam_data->exam_result;
 					$exam_detail = $exam_data->exam_detail;
 
-					// Only show user-defined exams with results
-					if ( ! $exam_result || ! isset( $exam_result['exam_status'] ) || ! $exam_detail || 'user_defined' !== $exam_detail['role'] ) {
+					// FIXED: Show both user_defined and admin_defined exams with results
+					// Skip only if there's no result data at all
+					if ( ! $exam_result || ! isset( $exam_result['exam_status'] ) || ! $exam_detail ) {
 						continue;
 					}
 
@@ -172,7 +197,7 @@ if ( isset( $_GET['wpexams_history_id'] ) ) {
 					?>
 					<tr>
 						<td data-label="<?php esc_attr_e( 'Date', 'wpexams' ); ?>">
-							<?php echo esc_html( get_the_date( 'Y-m-d' ) . '/' . get_the_time( 'H:i:s' ) ); ?>
+							<?php echo esc_html( get_the_date( 'Y-m-d' ) . ' ' . get_the_time( 'H:i:s' ) ); ?>
 						</td>
 						<td data-label="<?php esc_attr_e( '#Questions', 'wpexams' ); ?>">
 							<?php echo esc_html( $total_questions ); ?>
@@ -195,7 +220,7 @@ if ( isset( $_GET['wpexams_history_id'] ) ) {
 									printf( esc_html__( 'Score %1$d/%2$d', 'wpexams' ), $correct_count, $total_questions );
 									?>
 								</a>
-								<a href='?wpexams_review_id=<?php echo esc_attr( $exam_id ); ?>'>
+								<a href='?wpexams_review_id=<?php echo esc_attr( $exam_id ); ?>' style="margin-left: 10px;">
 									<?php esc_html_e( 'Review', 'wpexams' ); ?>
 								</a>
 							<?php endif; ?>
