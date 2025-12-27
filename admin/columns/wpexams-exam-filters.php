@@ -44,7 +44,7 @@ function wpexams_exam_custom_filters() {
 add_action( 'restrict_manage_posts', 'wpexams_exam_custom_filters' );
 
 /**
- * Filter exams by status
+ * Filter exams by status or type
  *
  * @param WP_Query $query Query object.
  */
@@ -57,19 +57,33 @@ function wpexams_exam_filter_queries( $query ) {
 		return;
 	}
 
+	$meta_query = array();
+
+	// Status filter
 	if ( ! empty( $_GET['wpexams_status_filter'] ) ) {
 		$status = sanitize_key( $_GET['wpexams_status_filter'] );
 
-		$query->set(
-			'meta_query',
-			array(
-				array(
-					'key'     => 'wpexams_exam_status',
-					'compare' => '=',
-					'value'   => $status,
-				),
-			)
+		$meta_query[] = array(
+			'key'     => 'wpexams_exam_status',
+			'compare' => '=',
+			'value'   => $status,
 		);
+	}
+
+	// Type filter (new)
+	if ( ! empty( $_GET['wpexams_type_filter'] ) ) {
+		$type = sanitize_key( $_GET['wpexams_type_filter'] );
+
+		$meta_query[] = array(
+			'key'     => 'wpexams_exam_detail',
+			'value'   => '"role";s:' . strlen( $type ) . ':"' . $type . '"',
+			'compare' => 'LIKE',
+		);
+	}
+
+	if ( ! empty( $meta_query ) ) {
+		$meta_query['relation'] = 'AND';
+		$query->set( 'meta_query', $meta_query );
 	}
 }
 add_filter( 'parse_query', 'wpexams_exam_filter_queries' );

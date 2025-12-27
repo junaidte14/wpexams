@@ -31,6 +31,23 @@ add_filter( 'manage_wpexams_exam_posts_columns', 'wpexams_exam_custom_columns' )
  * @param int    $post_id Post ID.
  */
 function wpexams_exam_column_content( $column, $post_id ) {
+	if ( 'wpexams_type' === $column ) {
+		$exam_data = wpexams_get_post_data( $post_id );
+		$detail = $exam_data->exam_detail;
+		
+		if ( $detail && isset( $detail['role'] ) ) {
+			$role = $detail['role'];
+			$label = 'admin_defined' === $role ? __( 'Predefined', 'wpexams' ) : __( 'User Defined', 'wpexams' );
+			$color = 'admin_defined' === $role ? '#0073aa' : '#666';
+			
+			printf(
+				'<span style="color: %s; font-weight: 600;">%s</span>',
+				esc_attr( $color ),
+				esc_html( $label )
+			);
+		}
+	}
+
 	if ( 'wpexams_taken_by' === $column ) {
 		$author_id = get_post_field( 'post_author', $post_id );
 		echo esc_html( get_the_author_meta( 'display_name', $author_id ) );

@@ -204,7 +204,20 @@ if ( isset( $_GET['wpexams_history_id'] ) ) {
 							$original_exam = get_post( $original_exam_id );
 							if ( $original_exam ) {
 								$exam_name = $original_exam->post_title;
+								
+								// If user-defined, show custom exam title with date
+								if ( 'user_defined' === $exam_type ) {
+									$exam_name = sprintf(
+										/* translators: 1: exam title, 2: date */
+										__( '%1$s (%2$s)', 'wpexams' ),
+										$original_exam->post_title,
+										get_the_date( 'Y-m-d H:i', $result_id )
+									);
+								}
 							}
+						} else {
+							// Old user-defined exam result (no exam_id reference)
+							$exam_name = get_the_title( $result_id );
 						}
 					}
 

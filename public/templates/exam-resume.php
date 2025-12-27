@@ -13,9 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Variables passed from exam-start.php:
-// $exam_id, $exam_result, $exam_detail, $current_user_id, $question_time_seconds, $show_progressbar
-
 // Get question count
 $question_count = isset( $exam_result['total_questions'] ) ? $exam_result['total_questions'] : count( $exam_detail['filtered_questions'] );
 

@@ -300,7 +300,7 @@ function wpexams_log( $message ) {
  * Create exam result post when user takes an exam
  *
  * @since 1.0.0
- * @param int   $exam_id    Original exam ID (predefined exam).
+ * @param int   $exam_id    Original exam ID (predefined or user-defined).
  * @param int   $user_id    User ID taking the exam.
  * @param array $exam_detail Exam detail data.
  * @return int|false Result post ID on success, false on failure.
@@ -313,19 +313,37 @@ function wpexams_create_exam_result( $exam_id, $user_id, $exam_detail ) {
 		return false;
 	}
 
-	// Count user's attempts for this exam
-	$attempt_count = wpexams_get_user_attempt_count( $exam_id, $user_id );
-	$attempt_number = $attempt_count + 1;
+	// Determine exam type
+	$exam_role = isset( $exam_detail['role'] ) ? $exam_detail['role'] : 'unknown';
+	$is_predefined = 'admin_defined' === $exam_role;
+	$is_user_defined = 'user_defined' === $exam_role;
+
+	// Count user's attempts for this exam (for predefined) or skip (for user-defined)
+	if ( $is_predefined ) {
+		$attempt_count = wpexams_get_user_attempt_count( $exam_id, $user_id );
+		$attempt_number = $attempt_count + 1;
+		
+		$post_title = sprintf(
+			/* translators: 1: exam title, 2: attempt number */
+			__( '%1$s - Attempt #%2$d', 'wpexams' ),
+			$exam_post->post_title,
+			$attempt_number
+		);
+	} else {
+		// User-defined exam - single attempt, use original title with date
+		$attempt_number = 1;
+		$post_title = sprintf(
+			/* translators: 1: exam title, 2: date/time */
+			__( '%1$s - %2$s', 'wpexams' ),
+			$exam_post->post_title,
+			current_time( 'Y-m-d H:i:s' )
+		);
+	}
 
 	// Create result post
 	$result_id = wp_insert_post(
 		array(
-			'post_title'  => sprintf(
-				/* translators: 1: exam title, 2: attempt number */
-				__( '%1$s - Attempt #%2$d', 'wpexams' ),
-				$exam_post->post_title,
-				$attempt_number
-			),
+			'post_title'  => $post_title,
 			'post_type'   => 'wpexams_result',
 			'post_status' => 'publish',
 			'post_author' => $user_id,

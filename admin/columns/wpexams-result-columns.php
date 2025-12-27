@@ -37,15 +37,27 @@ add_filter( 'manage_wpexams_result_posts_columns', 'wpexams_result_custom_column
 function wpexams_result_column_content( $column, $post_id ) {
 	if ( 'wpexams_exam' === $column ) {
 		$exam_id = get_post_meta( $post_id, 'wpexams_exam_id', true );
+		$result_data = wpexams_get_post_data( $post_id );
+		$exam_detail = $result_data->exam_detail;
+		$exam_type = isset( $exam_detail['role'] ) ? $exam_detail['role'] : 'unknown';
+		
 		if ( $exam_id ) {
 			$exam = get_post( $exam_id );
 			if ( $exam ) {
-				echo '<a href="' . esc_url( get_edit_post_link( $exam_id ) ) . '">' . esc_html( $exam->post_title ) . '</a>';
+				$exam_name = $exam->post_title;
+				
+				// For user-defined, add attempt date
+				if ( 'user_defined' === $exam_type ) {
+					$exam_name .= ' <small>(' . get_the_date( 'Y-m-d H:i', $post_id ) . ')</small>';
+				}
+				
+				echo '<a href="' . esc_url( get_edit_post_link( $exam_id ) ) . '">' . wp_kses_post( $exam_name ) . '</a>';
 			} else {
 				esc_html_e( 'N/A', 'wpexams' );
 			}
 		} else {
-			esc_html_e( 'User Defined', 'wpexams' );
+			// Old exam with no reference
+			echo esc_html( get_the_title( $post_id ) );
 		}
 	}
 

@@ -45,33 +45,34 @@ if ( empty( $exam_detail ) ) {
 	return;
 }
 
-// FIXED: Handle predefined exams using result posts (new architecture)
-$is_predefined = isset( $exam_detail['role'] ) && 'admin_defined' === $exam_detail['role'];
-$original_exam_id = $exam_id; // Keep track of original
+// FIXED: Both predefined AND user-defined exams follow the same pattern
+$post_type = get_post_type( $exam_id );
+$exam_role = isset( $exam_detail['role'] ) ? $exam_detail['role'] : 'unknown';
+$is_predefined = 'admin_defined' === $exam_role;
+$is_user_defined = 'user_defined' === $exam_role;
 
-if ( $is_predefined ) {
-	$post_type = get_post_type( $exam_id );
+// If this is an exam post (template), create/get result post for this attempt
+if ( 'wpexams_exam' === $post_type && ( $is_predefined || $is_user_defined ) ) {
+	// Check for pending result for THIS user on THIS exam
+	$result_post_id = wpexams_get_pending_result( $exam_id, $current_user_id );
 	
-	if ( 'wpexams_exam' === $post_type ) {
-		// This is the original predefined exam, check for pending result or create new
-		$result_post_id = wpexams_get_pending_result( $exam_id, $current_user_id );
+	if ( ! $result_post_id ) {
+		// Create new result post for this attempt
+		$result_post_id = wpexams_create_exam_result( $exam_id, $current_user_id, $exam_detail );
 		
 		if ( ! $result_post_id ) {
-			// Create new result post
-			$result_post_id = wpexams_create_exam_result( $exam_id, $current_user_id, $exam_detail );
-			
-			if ( ! $result_post_id ) {
-				echo '<p>' . esc_html__( 'Failed to create exam result.', 'wpexams' ) . '</p>';
-				return;
-			}
+			echo '<p>' . esc_html__( 'Failed to create exam result.', 'wpexams' ) . '</p>';
+			return;
 		}
-		
-		// Redirect to use result post ID
-		wp_safe_redirect( add_query_arg( 'wpexams_exam_id', $result_post_id, remove_query_arg( 'wpexams_exam_id' ) ) );
-		exit;
 	}
+	
+	// Redirect to use result post ID
+	// Now both predefined AND user-defined exams redirect to result post
+	wp_safe_redirect( add_query_arg( 'wpexams_exam_id', $result_post_id, remove_query_arg( 'wpexams_exam_id' ) ) );
+	exit;
 }
 
+// If we're here, we're already on a result post
 // Check if exam is already completed
 if ( $exam_result && isset( $exam_result['exam_status'] ) && 'completed' === $exam_result['exam_status'] ) {
 	echo '<p>' . esc_html__( 'This exam has already been completed.', 'wpexams' ) . ' ';
