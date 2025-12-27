@@ -37,6 +37,11 @@ if ( ! $question_post ) {
 $question_data = wpexams_get_post_data( $resume_question_id );
 $question_fields = $question_data->question_fields;
 
+$exam_time_seconds = 0;
+$is_timed = isset( $exam_detail['is_timed'] ) && '1' === $exam_detail['is_timed'];
+if ( $is_timed ) {
+	$exam_time_seconds = $question_time_seconds * $question_count;
+}
 // Calculate progress
 $progress_percent = round( ( ( $current_index + 1 ) / count( $exam_result['filtered_questions'] ) ) * 100 );
 
@@ -53,7 +58,12 @@ $progress_percent = round( ( ( $current_index + 1 ) / count( $exam_result['filte
 					  onclick="wpexamsStartTimer('<?php echo '1' === $exam_detail['is_timed'] ? 'wpexamsTimedTimer' : 'wpexamsUntimedTimer'; ?>','wpexamsQuestionTimer')">▶</span>
 				<span class='wpexams-mr-15 wpexams-pointer' id='wpexams_pause_timer' 
 					  onclick="wpexamsPauseTimer('<?php echo '1' === $exam_detail['is_timed'] ? 'wpexamsTimedTimer' : 'wpexamsUntimedTimer'; ?>','wpexamsQuestionTimer')">⏸</span>
-				<div id="wpexams_exam_timer"></div>
+				<div id="wpexams_exam_timer">
+					<?php 
+					$saved_exam_time = isset( $exam_result['exam_time'] ) ? $exam_result['exam_time'] : '00:00:00';
+					echo esc_html( $saved_exam_time );
+					?>
+				</div>
 			</h5>
 		</div>
 
@@ -110,14 +120,12 @@ $progress_percent = round( ( ( $current_index + 1 ) / count( $exam_result['filte
 					<?php esc_html_e( 'Explanation:', 'wpexams' ); ?>
 				</div>
 
-				<?php if ( '1' === $exam_detail['show_answer_immediately'] ) : ?>
-					<div class='wpexams-text-right'>
-						<button id='wpexamsSubmitQuestion' class='wpexams-button wpexams-exam-button' 
-								onclick='wpexamsSubmitAnswer("<?php echo esc_js( $resume_question_id ); ?>", "<?php echo esc_js( $exam_id ); ?>")'>
-							<?php esc_html_e( 'Submit', 'wpexams' ); ?>
-						</button>
-					</div>
-				<?php endif; ?>
+				<div class='wpexams-text-right'>
+					<button id='wpexamsSubmitQuestion' class='wpexams-button wpexams-exam-button' 
+							onclick='wpexamsSubmitAnswer("<?php echo esc_js( $resume_question_id ); ?>", "<?php echo esc_js( $exam_id ); ?>")'>
+						<?php esc_html_e( 'Submit', 'wpexams' ); ?>
+					</button>
+				</div>
 
 				<div class='wpexams-text-center'>
 					<?php
@@ -132,7 +140,7 @@ $progress_percent = round( ( ( $current_index + 1 ) / count( $exam_result['filte
 						<?php esc_html_e( 'Previous', 'wpexams' ); ?>
 					</button>
 					<button id="wpexamsNextQuestion" 
-							class='wpexams-button wpexams-exam-button <?php echo '1' === $exam_detail['show_answer_immediately'] ? 'wpexams-hide' : ''; ?>' 
+							class='wpexams-button wpexams-exam-button wpexams-hide' 
 							data-question="<?php echo esc_attr( $resume_question_id ); ?>" 
 							data-action="<?php echo $is_last ? 'show_result' : 'next'; ?>" 
 							data-exam="<?php echo esc_attr( $exam_id ); ?>">
@@ -153,24 +161,20 @@ $progress_percent = round( ( ( $current_index + 1 ) / count( $exam_result['filte
 
 <script>
 jQuery(document).ready(function($) {
-	// Resume timers from saved state
-	<?php if ( '1' === $exam_detail['is_timed'] ) : ?>
-		<?php
-		$exam_time_saved = isset( $exam_result['exam_time'] ) ? $exam_result['exam_time'] : '00:00:00';
-		?>
-		var examTime = "<?php echo esc_js( $exam_time_saved ); ?>";
-		var parts = examTime.split(':');
-		wpexamsTimedQuizCountdownTimer(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]), "wpexamsTimedTimer");
-	<?php else : ?>
-		<?php
-		$exam_time_saved = isset( $exam_result['exam_time'] ) ? $exam_result['exam_time'] : '00:00:00';
-		?>
-		var examTime = "<?php echo esc_js( $exam_time_saved ); ?>";
-		var parts = examTime.split(':');
-		wpexamsUntimedQuizCountdownTimer(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]), "wpexamsUntimedTimer");
-	<?php endif; ?>
-	
-	// Start question timer
-	wpexamsQuestionCountdownTimer(0, 0, 0, "wpexamsQuestionTimer");
+    <?php if ( $is_timed ) : ?>
+        var savedTime = "<?php echo esc_js( $saved_exam_time ); ?>";
+        var parts = savedTime.split(':');
+        if (parts.length === 3) {
+            wpexamsTimedQuizCountdownTimer(parseInt(parts[0], 10), parseInt(parts[1], 10), parseInt(parts[2], 10), "wpexamsTimedTimer");
+        }
+    <?php else : ?>
+        var savedTime = "<?php echo esc_js( $saved_exam_time ); ?>";
+        var parts = savedTime.split(':');
+        if (parts.length === 3) {
+            wpexamsUntimedQuizCountdownTimer(parseInt(parts[0], 10), parseInt(parts[1], 10), parseInt(parts[2], 10), "wpexamsUntimedTimer");
+        }
+    <?php endif; ?>
+    
+    wpexamsQuestionCountdownTimer(0, 0, 0, "wpexamsQuestionTimer");
 });
 </script>

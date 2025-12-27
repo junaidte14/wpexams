@@ -63,8 +63,6 @@ require_once WPEXAMS_PLUGIN_DIR . 'public/ajax/wpexams-exam-navigation.php';
 require_once WPEXAMS_PLUGIN_DIR . 'public/ajax/wpexams-exam-save.php';
 require_once WPEXAMS_PLUGIN_DIR . 'public/ajax/wpexams-exam-submit.php';
 require_once WPEXAMS_PLUGIN_DIR . 'public/ajax/wpexams-exam-expired.php';
-require_once WPEXAMS_PLUGIN_DIR . 'public/ajax/wpexams-exam-review.php';
-require_once WPEXAMS_PLUGIN_DIR . 'public/ajax/wpexams-exam-reset.php';
 
 /**
  * Load core files

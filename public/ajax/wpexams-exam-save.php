@@ -52,49 +52,29 @@ function wpexams_ajax_save_exam() {
 	$category_ids    = array_map( 'absint', (array) $exam_data['category_field'] );
 	$question_count  = absint( $exam_data['question_count'] );
 	$is_timed        = isset( $exam_data['is_timed'] ) ? '1' : '0';
-	$show_immediate  = isset( $exam_data['show_answer_immediately'] ) ? $exam_data['show_answer_immediately'] : '0';
-	$unused_only     = isset( $exam_data['unused_questions_only'] ) ? $exam_data['unused_questions_only'] : '0';
 
-	// Get questions
-	if ( '1' === $unused_only ) {
-		// Get only unused questions
-		$question_ids = wpexams_get_unused_questions( $category_ids );
+	// Get all questions in categories
+	$question_ids = get_posts(
+		array(
+			'post_type'      => 'wpexams_question',
+			'category'       => $category_ids,
+			'posts_per_page' => $question_count,
+			'fields'         => 'ids',
+			'post_status'    => 'publish',
+			'orderby'        => 'rand',
+		)
+	);
 
-		if ( empty( $question_ids ) || count( $question_ids ) < $question_count ) {
-			wp_send_json_error(
-				array(
-					'message' => sprintf(
-						/* translators: %d: number of unused questions */
-						__( 'Not enough unused questions available. Only %d unused questions found.', 'wpexams' ),
-						count( $question_ids )
-					),
-				)
-			);
-		}
-	} else {
-		// Get all questions in categories
-		$question_ids = get_posts(
+	if ( empty( $question_ids ) || count( $question_ids ) < $question_count ) {
+		wp_send_json_error(
 			array(
-				'post_type'      => 'wpexams_question',
-				'category'       => $category_ids,
-				'posts_per_page' => $question_count,
-				'fields'         => 'ids',
-				'post_status'    => 'publish',
-				'orderby'        => 'rand',
+				'message' => sprintf(
+					/* translators: %d: number of questions available */
+					__( 'Not enough questions available. Only %d questions found in selected categories.', 'wpexams' ),
+					count( $question_ids )
+				),
 			)
 		);
-
-		if ( empty( $question_ids ) || count( $question_ids ) < $question_count ) {
-			wp_send_json_error(
-				array(
-					'message' => sprintf(
-						/* translators: %d: number of questions available */
-						__( 'Not enough questions available. Only %d questions found in selected categories.', 'wpexams' ),
-						count( $question_ids )
-					),
-				)
-			);
-		}
 	}
 
 	// Limit to requested count
@@ -139,8 +119,6 @@ function wpexams_ajax_save_exam() {
 		'category_field'            => $category_ids,
 		'question_count'            => $question_count,
 		'is_timed'                  => $is_timed,
-		'show_answer_immediately'   => $show_immediate,
-		'unused_questions_only'     => $unused_only,
 		'role'                      => 'user_defined',
 		'user_id'                   => get_current_user_id(),
 		'filtered_questions'        => $question_ids,

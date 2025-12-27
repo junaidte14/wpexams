@@ -74,7 +74,7 @@ function wpexams_fix_parent_menu( $parent_file ) {
 	}
 
 	if ( in_array( $current_screen->base, array( 'post', 'edit' ), true ) && 
-	     in_array( $current_screen->post_type, array( 'wpexams_question', 'wpexams_result' ), true ) ) {
+	     in_array( $current_screen->post_type, array( 'wpexams_question', 'wpexams_exam', 'wpexams_result' ), true ) ) {
 		$parent_file = 'wpexams';
 	}
 
@@ -100,6 +100,8 @@ function wpexams_fix_submenu_file( $submenu_file ) {
 			$submenu_file = 'edit.php?post_type=wpexams_question';
 		} elseif ( 'wpexams_result' === $current_screen->post_type ) {
 			$submenu_file = 'edit.php?post_type=wpexams_result';
+		} elseif ( 'wpexams_exam' === $current_screen->post_type ) {
+			$submenu_file = 'edit.php?post_type=wpexams_exam';
 		}
 	}
 

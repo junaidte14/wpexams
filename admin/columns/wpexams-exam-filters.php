@@ -21,21 +21,15 @@ function wpexams_exam_custom_filters() {
 		return;
 	}
 
-	$current_status = isset( $_GET['wpexams_status_filter'] ) ? sanitize_key( $_GET['wpexams_status_filter'] ) : '';
+	$current_type = isset( $_GET['wpexams_type_filter'] ) ? sanitize_key( $_GET['wpexams_type_filter'] ) : '';
 
 	?>
-	<select id="wpexams_status_filter" name="wpexams_status_filter">
-		<option value=""><?php esc_html_e( 'Select Status Type', 'wpexams' ); ?></option>
-		<option value="Useless" <?php selected( $current_status, 'Useless' ); ?>>
-			<?php esc_html_e( 'Useless', 'wpexams' ); ?>
+	<select id="wpexams_type_filter" name="wpexams_type_filter">
+		<option value=""><?php esc_html_e( 'Select Exam Type', 'wpexams' ); ?></option>
+		<option value="user_defined" <?php selected( $current_type, 'user_defined' ); ?>>
+			<?php esc_html_e( 'User Defined', 'wpexams' ); ?>
 		</option>
-		<option value="Completed" <?php selected( $current_status, 'Completed' ); ?>>
-			<?php esc_html_e( 'Completed', 'wpexams' ); ?>
-		</option>
-		<option value="Pending" <?php selected( $current_status, 'Pending' ); ?>>
-			<?php esc_html_e( 'Pending', 'wpexams' ); ?>
-		</option>
-		<option value="Predefined" <?php selected( $current_status, 'Predefined' ); ?>>
+		<option value="admin_defined" <?php selected( $current_type, 'admin_defined' ); ?>>
 			<?php esc_html_e( 'Predefined', 'wpexams' ); ?>
 		</option>
 	</select>
@@ -58,17 +52,6 @@ function wpexams_exam_filter_queries( $query ) {
 	}
 
 	$meta_query = array();
-
-	// Status filter
-	if ( ! empty( $_GET['wpexams_status_filter'] ) ) {
-		$status = sanitize_key( $_GET['wpexams_status_filter'] );
-
-		$meta_query[] = array(
-			'key'     => 'wpexams_exam_status',
-			'compare' => '=',
-			'value'   => $status,
-		);
-	}
 
 	// Type filter (new)
 	if ( ! empty( $_GET['wpexams_type_filter'] ) ) {

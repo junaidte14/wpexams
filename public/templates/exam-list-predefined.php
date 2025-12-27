@@ -35,9 +35,6 @@ $predefined_exams = get_posts(
 		<p style="margin:0px;flex-grow:1;">
 			<?php esc_html_e( 'Explore our collection of predefined exams and test your knowledge!', 'wpexams' ); ?>
 		</p>
-		<a href="?wpexams_new_exam" class='wpexams-button wpexams-exam-button'>
-			<?php esc_html_e( 'Create Your Own Exam', 'wpexams' ); ?>
-		</a>
 	</div>
 
 	<table class='wpexams-data-table'>

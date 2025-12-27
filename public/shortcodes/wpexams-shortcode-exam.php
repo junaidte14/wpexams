@@ -50,6 +50,17 @@ function wpexams_exam_shortcode( $atts ) {
 				<?php if ( $user_data ) : ?>
 					<p><?php echo esc_html( $user_data->user_login ); ?></p>
 				<?php endif; ?>
+				<div class='wpexams-head-menus-links'>
+					<a class="wpexams-menu-link" href="<?php echo esc_url( get_permalink() ); ?>">
+						<?php esc_html_e( 'Take Exam', 'wpexams' ); ?>
+					</a>
+					<a href="?wpexams_new_exam" class='wpexams-menu-link'>
+						<?php esc_html_e( 'Create Your Own Exam', 'wpexams' ); ?>
+					</a>
+					<a class="wpexams-menu-link" href="?wpexams_history">
+						<?php esc_html_e( 'History', 'wpexams' ); ?>
+					</a>
+				</div>
 			</div>
 		</div>
 		<?php
@@ -57,19 +68,6 @@ function wpexams_exam_shortcode( $atts ) {
 
 	// Display navigation menus
 	?>
-	<div class='wpexams-head-menus-links'>
-		<a class="wpexams-menu-link" href="<?php echo esc_url( get_permalink() ); ?>">
-			<?php esc_html_e( 'New Exam', 'wpexams' ); ?>
-		</a>
-		<a class="wpexams-menu-link" href="?wpexams_history">
-			<?php esc_html_e( 'Exam History', 'wpexams' ); ?>
-		</a>
-		<button type='button' class='wpexams-button wpexams-reset-question-bank' id='wpexams-reset-question-bank'
-				title="<?php esc_attr_e( 'Clear questions usage history. So that the already used questions can again be used in a new exam.', 'wpexams' ); ?>">
-			<?php esc_html_e( 'Reset Question Bank', 'wpexams' ); ?>
-		</button>
-	</div>
-
 	<div class='wpexams-main'>
 		<div>
 			<span id='wpexams-reset-question-bank-message'></span>
@@ -79,8 +77,6 @@ function wpexams_exam_shortcode( $atts ) {
 		// Determine which template to load
 		if ( isset( $_GET['wpexams_exam_id'] ) ) {
 			wpexams_load_template( 'exam-start', compact( 'current_user_id', 'question_time_seconds', 'show_progressbar' ) );
-		} elseif ( isset( $_GET['wpexams_review_id'] ) ) {
-			wpexams_load_template( 'exam-review', compact( 'current_user_id', 'question_time_seconds' ) );
 		} elseif ( isset( $_GET['wpexams_history'] ) ) {
 			wpexams_load_template( 'exam-history', compact( 'current_user_id', 'question_time_seconds' ) );
 		} elseif ( isset( $_GET['wpexams_new_exam'] ) ) {

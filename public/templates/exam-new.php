@@ -108,36 +108,6 @@ $categories = get_categories(
 			</label>
 		</div>
 
-		<!-- All/Unused Questions -->
-		<div class='wpexams-answer-show-immed-content wpexams-mt-15'>
-			<p class='wpexams-m-0 wpexams-bold'>
-				<?php esc_html_e( 'Question Selection *', 'wpexams' ); ?>
-			</p>
-			<label>
-				<input type="radio" checked name="wpexams_unused_questions" value="0" />
-				<?php esc_html_e( 'All Questions', 'wpexams' ); ?>
-			</label><br>
-			<label>
-				<input type="radio" name="wpexams_unused_questions" value="1" />
-				<?php esc_html_e( 'Unused Questions Only', 'wpexams' ); ?>
-			</label>
-		</div>
-
-		<!-- Show Answer Immediately -->
-		<div class='wpexams-answer-show-immed-content wpexams-mt-15'>
-			<p class='wpexams-m-0 wpexams-bold'>
-				<?php esc_html_e( 'View answer immediately after each question?', 'wpexams' ); ?>
-			</p>
-			<label>
-				<input type="radio" name="wpexams_show_answer_immediately" value="1" />
-				<?php esc_html_e( 'Yes', 'wpexams' ); ?>
-			</label><br>
-			<label>
-				<input type="radio" checked name="wpexams_show_answer_immediately" value="0" />
-				<?php esc_html_e( 'No', 'wpexams' ); ?>
-			</label>
-		</div>
-
 		<div id="wpexams-exam-error-message" style="color: red; margin: 10px 0;"></div>
 
 		<button class='wpexams-button wpexams-exam-button' 
@@ -198,9 +168,7 @@ jQuery(document).ready(function($) {
 		var examData = {
 			category_field: categories,
 			question_count: questionCount,
-			is_timed: $('#wpexams_timed_field').is(':checked') ? '1' : '0',
-			unused_questions_only: $('input[name=wpexams_unused_questions]:checked').val(),
-			show_answer_immediately: $('input[name=wpexams_show_answer_immediately]:checked').val(),
+			is_timed: $('#wpexams_timed_field').is(':checked') ? '1' : '0'
 		};
 
 		// Disable button

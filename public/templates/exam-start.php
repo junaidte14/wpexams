@@ -76,7 +76,7 @@ if ( 'wpexams_exam' === $post_type && ( $is_predefined || $is_user_defined ) ) {
 // Check if exam is already completed
 if ( $exam_result && isset( $exam_result['exam_status'] ) && 'completed' === $exam_result['exam_status'] ) {
 	echo '<p>' . esc_html__( 'This exam has already been completed.', 'wpexams' ) . ' ';
-	echo '<a href="?wpexams_review_id=' . esc_attr( $exam_id ) . '">' . esc_html__( 'Review your answers', 'wpexams' ) . '</a></p>';
+	echo '<a href="?wpexams_history&wpexams_history_id=' . esc_attr( $exam_id ) . '">' . esc_html__( 'Review your answers', 'wpexams' ) . '</a></p>';
 	return;
 }
 
@@ -111,12 +111,10 @@ $question_fields = $question_data->question_fields;
 
 // Calculate exam time for timed exams
 $exam_time_seconds = 0;
-if ( '1' === $exam_detail['is_timed'] ) {
+$is_timed = isset( $exam_detail['is_timed'] ) && '1' === $exam_detail['is_timed'];
+if ( $is_timed ) {
 	$exam_time_seconds = $question_time_seconds * $question_count;
 }
-
-// FIXED: Force show_answer_immediately to '1' for ALL exam types to ensure consistent behavior
-$show_answer_immediately = isset( $exam_detail['show_answer_immediately'] ) ? $exam_detail['show_answer_immediately'] : '0';
 
 ?>
 
@@ -131,7 +129,15 @@ $show_answer_immediately = isset( $exam_detail['show_answer_immediately'] ) ? $e
 					  onclick="wpexamsStartTimer('<?php echo '1' === $exam_detail['is_timed'] ? 'wpexamsTimedTimer' : 'wpexamsUntimedTimer'; ?>','wpexamsQuestionTimer')">▶</span>
 				<span class='wpexams-mr-15 wpexams-pointer' id='wpexams_pause_timer' 
 					  onclick="wpexamsPauseTimer('<?php echo '1' === $exam_detail['is_timed'] ? 'wpexamsTimedTimer' : 'wpexamsUntimedTimer'; ?>','wpexamsQuestionTimer')">⏸</span>
-				<div id="wpexams_exam_timer"></div>
+				<div id="wpexams_exam_timer">
+					<?php 
+					if ( $is_timed ) {
+						echo esc_html( wpexams_seconds_to_time( $exam_time_seconds ) );
+					} else {
+						echo '00:00:00';
+					}
+					?>
+				</div>
 			</h5>
 		</div>
 
@@ -154,7 +160,7 @@ $show_answer_immediately = isset( $exam_detail['show_answer_immediately'] ) ? $e
 			<div id='wpexams-question-head'>
 				<p id='wpexams-exam-question-title'>
 					<?php echo esc_html( $first_question->post_title ); ?>
-					<span class='wpexams-f-right' id="wpexams_question_timer"></span>
+					<span class='wpexams-f-right' id="wpexams_question_timer">00:00:00</span>
 				</p>
 			</div>
 
@@ -199,19 +205,19 @@ $show_answer_immediately = isset( $exam_detail['show_answer_immediately'] ) ? $e
 			<div class='wpexams-text-center'>
 				<button id='wpexamsPrevQuestion' 
 						class='wpexams-button wpexams-exam-button wpexams-hide' 
-						onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', 'prev', '1', '<?php echo esc_js( $exam_id ); ?>')">
+						onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', 'prev', '<?php echo esc_js( $exam_id ); ?>')">
 					<?php esc_html_e( 'Previous', 'wpexams' ); ?>
 				</button>
 				
 				<button id='wpexamsNextQuestion' 
 						class='wpexams-button wpexams-exam-button wpexams-hide' 
-						onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', '<?php echo $question_count === 1 ? 'show_result' : 'next'; ?>', '1', '<?php echo esc_js( $exam_id ); ?>')">
+						onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', '<?php echo $question_count === 1 ? 'show_result' : 'next'; ?>', '<?php echo esc_js( $exam_id ); ?>')">
 					<?php echo $question_count === 1 ? esc_html__( 'Show Result', 'wpexams' ) : esc_html__( 'Next', 'wpexams' ); ?>
 				</button>
 				
 				<button id='wpexamsExitExam' 
 						class='wpexams-button wpexams-exam-button' 
-						onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', 'exit', '1', '<?php echo esc_js( $exam_id ); ?>')">
+						onclick="wpexamsNextQuestion('<?php echo esc_js( $first_question_id ); ?>', 'exit', '<?php echo esc_js( $exam_id ); ?>')">
 					<?php esc_html_e( 'Exit', 'wpexams' ); ?>
 				</button>
 			</div>
@@ -221,18 +227,14 @@ $show_answer_immediately = isset( $exam_detail['show_answer_immediately'] ) ? $e
 
 <script>
 jQuery(document).ready(function($) {
-	// FIXED: Initialize timers based on is_timed setting from exam_detail
-	<?php if ( $is_timed ) : ?>
-		// Timed exam - count DOWN from allocated time
-		var examTime = <?php echo absint( $exam_time_seconds ); ?>;
-		var examHms = wpexamsConvertSecondsToHms(examTime);
-		wpexamsTimedQuizCountdownTimer(parseInt(examHms.hrs), parseInt(examHms.min), parseInt(examHms.sec), "wpexamsTimedTimer");
-	<?php else : ?>
-		// Untimed exam - count UP from zero
-		wpexamsUntimedQuizCountdownTimer(0, 0, 0, "wpexamsUntimedTimer");
-	<?php endif; ?>
-	
-	// Initialize question timer (always counts UP)
-	wpexamsQuestionCountdownTimer(0, 0, 0, "wpexamsQuestionTimer");
+    <?php if ( $is_timed ) : ?>
+        var examTimeSeconds = <?php echo absint( $exam_time_seconds ); ?>;
+        var examHms = wpexamsConvertSecondsToHms(examTimeSeconds);
+        wpexamsTimedQuizCountdownTimer(parseInt(examHms.hrs), parseInt(examHms.min), parseInt(examHms.sec), "wpexamsTimedTimer");
+    <?php else : ?>
+        wpexamsUntimedQuizCountdownTimer(0, 0, 0, "wpexamsUntimedTimer");
+    <?php endif; ?>
+    
+    wpexamsQuestionCountdownTimer(0, 0, 0, "wpexamsQuestionTimer");
 });
 </script>

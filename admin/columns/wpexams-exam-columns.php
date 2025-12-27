@@ -18,8 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return array Modified columns.
  */
 function wpexams_exam_custom_columns( $columns ) {
-	$columns['wpexams_taken_by'] = __( 'Taken By', 'wpexams' );
-	$columns['wpexams_status']   = __( 'Status', 'wpexams' );
+	$columns['wpexams_type'] = __( 'Type', 'wpexams' );
 	return $columns;
 }
 add_filter( 'manage_wpexams_exam_posts_columns', 'wpexams_exam_custom_columns' );
@@ -48,45 +47,6 @@ function wpexams_exam_column_content( $column, $post_id ) {
 		}
 	}
 
-	if ( 'wpexams_taken_by' === $column ) {
-		$author_id = get_post_field( 'post_author', $post_id );
-		echo esc_html( get_the_author_meta( 'display_name', $author_id ) );
-	}
-
-	if ( 'wpexams_status' === $column ) {
-		// Get post data
-		$exam_data = wpexams_get_post_data( $post_id );
-		$result    = $exam_data->exam_result;
-		$detail    = $exam_data->exam_detail;
-
-		$status = 'pending';
-
-		if ( $result && isset( $result['exam_status'] ) ) {
-			$status = $result['exam_status'];
-			
-			// Update status meta for filtering
-			update_post_meta( $post_id, 'wpexams_exam_status', ucfirst( $status ) );
-		} else {
-			if ( is_array( $detail ) ) {
-				if ( isset( $detail['role'] ) && 'user_defined' === $detail['role'] ) {
-					$status = 'useless';
-				} else {
-					$status = 'predefined';
-				}
-				update_post_meta( $post_id, 'wpexams_exam_status', ucfirst( $status ) );
-			} else {
-				update_post_meta( $post_id, 'wpexams_exam_status', 'Useless' );
-			}
-		}
-
-		// Display status with color coding
-		$status_class = 'wpexams-status-' . esc_attr( $status );
-		printf(
-			'<span class="%s">%s</span>',
-			esc_attr( $status_class ),
-			esc_html( ucfirst( $status ) )
-		);
-	}
 }
 add_action( 'manage_wpexams_exam_posts_custom_column', 'wpexams_exam_column_content', 10, 2 );
 

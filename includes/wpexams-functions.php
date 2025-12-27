@@ -139,7 +139,7 @@ function wpexams_sanitize_exam_detail( $data ) {
 	}
 
 	// Boolean fields
-	$bool_fields = array( 'is_timed', 'show_answer_immediately', 'unused_questions_only' );
+	$bool_fields = array( 'is_timed' );
 	foreach ( $bool_fields as $field ) {
 		if ( isset( $data[ $field ] ) ) {
 			$sanitized[ $field ] = '1' === $data[ $field ] || 1 === $data[ $field ] ? '1' : '0';
@@ -190,63 +190,6 @@ function wpexams_sanitize_question_data( $data ) {
 	}
 
 	return $sanitized;
-}
-
-/**
- * Get unused questions for user
- *
- * @since 1.0.0
- * @param array $category_ids Category IDs to filter.
- * @param int   $user_id      User ID. Default current user.
- * @return array Array of unused question IDs.
- */
-function wpexams_get_unused_questions( $category_ids, $user_id = 0 ) {
-	if ( ! $user_id ) {
-		$user_id = get_current_user_id();
-	}
-
-	// Get all questions in categories
-	$all_questions = get_posts(
-		array(
-			'post_type'      => 'wpexams_question',
-			'category'       => $category_ids,
-			'posts_per_page' => -1,
-			'fields'         => 'ids',
-			'post_status'    => 'publish',
-		)
-	);
-
-	// Get user's used questions
-	$user_exams = get_posts(
-		array(
-			'post_type'      => 'wpexams_exam',
-			'author'         => $user_id,
-			'posts_per_page' => -1,
-			'post_status'    => 'publish',
-		)
-	);
-
-	$used_questions = array();
-	foreach ( $user_exams as $exam ) {
-		$exam_data = wpexams_get_post_data( $exam->ID );
-
-		if ( ! empty( $exam_data->exam_result['used_questions'] ) ) {
-			$used_questions = array_merge( $used_questions, $exam_data->exam_result['used_questions'] );
-		}
-	}
-
-	// Return unused questions
-	$unused = array_diff( $all_questions, array_unique( $used_questions ) );
-
-	/**
-	 * Filter unused questions
-	 *
-	 * @since 1.0.0
-	 * @param array $unused       Unused question IDs.
-	 * @param array $category_ids Category IDs.
-	 * @param int   $user_id      User ID.
-	 */
-	return apply_filters( 'wpexams_unused_questions', $unused, $category_ids, $user_id );
 }
 
 /**
@@ -365,7 +308,6 @@ function wpexams_create_exam_result( $exam_id, $user_id, $exam_detail ) {
 		'exam_id'            => $exam_id,
 		'exam_status'        => 'pending',
 		'solved_questions'   => array(),
-		'used_questions'     => array(),
 		'correct_answers'    => array(),
 		'wrong_answers'      => array(),
 		'question_times'     => array(),
@@ -449,4 +391,52 @@ function wpexams_get_pending_result( $exam_id, $user_id ) {
 	);
 
 	return ! empty( $results ) ? $results[0] : false;
+}
+
+/**
+ * Get user's answer for a specific question
+ *
+ * @param array $exam_result Exam result data.
+ * @param int   $question_id Question ID.
+ * @return string|null User's answer or null if not found.
+ */
+function wpexams_get_user_answer( $exam_result, $question_id ) {
+	// Check in correct answers
+	if ( isset( $exam_result['correct_answers'] ) ) {
+		foreach ( $exam_result['correct_answers'] as $answer ) {
+			if ( (int) $answer['question_id'] === (int) $question_id ) {
+				return $answer['answer'];
+			}
+		}
+	}
+
+	// Check in wrong answers
+	if ( isset( $exam_result['wrong_answers'] ) ) {
+		foreach ( $exam_result['wrong_answers'] as $answer ) {
+			if ( (int) $answer['question_id'] === (int) $question_id ) {
+				return $answer['answer'];
+			}
+		}
+	}
+
+	return 'null';
+}
+
+/**
+ * Get time taken for a specific question
+ *
+ * @param array $exam_result Exam result data.
+ * @param int   $question_id Question ID.
+ * @return string Question time or default.
+ */
+function wpexams_get_question_time( $exam_result, $question_id ) {
+	if ( isset( $exam_result['question_times'] ) ) {
+		foreach ( $exam_result['question_times'] as $time_data ) {
+			if ( (int) $time_data['question_id'] === (int) $question_id ) {
+				return $time_data['time'];
+			}
+		}
+	}
+
+	return '00:00:00';
 }

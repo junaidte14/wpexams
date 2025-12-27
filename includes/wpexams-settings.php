@@ -32,7 +32,7 @@ add_action( 'admin_init', 'wpexams_register_settings' );
 /**
  * Sanitize general settings
  *
- * @since 2.0.0
+ * @since 1.0.0
  * @param array $input Raw input data.
  * @return array Sanitized data.
  */
@@ -54,13 +54,13 @@ function wpexams_sanitize_general_settings( $input ) {
 	// Question time in seconds
 	if ( isset( $input['question_time_seconds'] ) ) {
 		$value                               = absint( $input['question_time_seconds'] );
-		$sanitized['question_time_seconds'] = $value > 0 ? $value : 82;
+		$sanitized['question_time_seconds'] = $value > 0 ? $value : 60;
 	}
 
 	/**
 	 * Filter sanitized general settings
 	 *
-	 * @since 2.0.0
+	 * @since 1.0.0
 	 * @param array $sanitized Sanitized settings.
 	 * @param array $input     Raw input.
 	 */
@@ -70,7 +70,7 @@ function wpexams_sanitize_general_settings( $input ) {
 /**
  * Sanitize color settings
  *
- * @since 2.0.0
+ * @since 1.0.0
  * @param array $input Raw input data.
  * @return array Sanitized data.
  */
@@ -92,7 +92,7 @@ function wpexams_sanitize_color_settings( $input ) {
 	/**
 	 * Filter sanitized color settings
 	 *
-	 * @since 2.0.0
+	 * @since 1.0.0
 	 * @param array $sanitized Sanitized settings.
 	 * @param array $input     Raw input.
 	 */

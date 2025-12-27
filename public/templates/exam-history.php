@@ -194,6 +194,9 @@ if ( isset( $_GET['wpexams_history_id'] ) ) {
 					$total_questions = isset( $exam_result['total_questions'] ) ? $exam_result['total_questions'] : 0;
 					$exam_status     = $exam_result['exam_status'];
 
+					// FIXED: Define $exam_type variable
+					$exam_type = isset( $exam_detail['role'] ) ? $exam_detail['role'] : 'unknown';
+
 					// Get exam name
 					$exam_name = get_the_title( $result_id );
 					
@@ -270,9 +273,6 @@ if ( isset( $_GET['wpexams_history_id'] ) ) {
 									/* translators: 1: correct answers, 2: total questions, 3: percentage */
 									printf( esc_html__( '%1$d/%2$d (%3$d%%)', 'wpexams' ), $correct_count, $total_questions, $percentage );
 									?>
-								</a>
-								<a href='?wpexams_review_id=<?php echo esc_attr( $result_id ); ?>' style="margin-left: 10px;">
-									<?php esc_html_e( 'Review', 'wpexams' ); ?>
 								</a>
 							<?php endif; ?>
 						</td>

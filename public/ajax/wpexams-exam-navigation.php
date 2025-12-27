@@ -1,6 +1,6 @@
 <?php
 /**
- * Exam navigation AJAX handler - FIXED VERSION (Issue #4 - No Duplicates)
+ * Exam navigation AJAX handler
  *
  * Handles next/previous question navigation with full security
  *
@@ -52,7 +52,6 @@ function wpexams_ajax_exam_navigation() {
     $exam_time      = sanitize_text_field( $_POST['exam_time'] );
     $question_time  = sanitize_text_field( $_POST['question_time'] );
     $user_answer    = isset( $_POST['user_answer'] ) ? sanitize_key( $_POST['user_answer'] ) : 'null';
-    $show_immediate = isset( $_POST['show_immediate'] ) ? '1' : '0';
 
     // Get exam data
     $exam_data = wpexams_get_post_data( $exam_id );
@@ -264,7 +263,6 @@ function wpexams_ensure_user_exam_instance( $original_exam_id, $user_id ) {
 		'user_id'            => $user_id,
 		'exam_status'        => 'pending',
 		'solved_questions'   => array(),
-		'used_questions'     => array(),
 		'correct_answers'    => array(),
 		'wrong_answers'      => array(),
 		'question_times'     => array(),
@@ -317,100 +315,6 @@ function wpexams_get_next_question_id( $current_id, $exam_detail, $action_type )
 }
 
 /**
- * Save exam answer
- *
- * @since 1.0.0
- * @param int    $exam_id        Exam ID.
- * @param int    $question_id    Question ID.
- * @param string $user_answer    User's answer.
- * @param string $exam_time      Total exam time.
- * @param string $question_time  Question time.
- * @param string $show_immediate Whether to show answer immediately.
- * @return bool True on success.
- */
-function wpexams_save_exam_answer( $exam_id, $question_id, $user_answer, $exam_time, $question_time, $show_immediate ) {
-	$exam_data = wpexams_get_post_data( $exam_id );
-
-	// Initialize result if not exists
-	$result = ! empty( $exam_data->exam_result ) ? $exam_data->exam_result : array(
-		'filtered_questions' => array(),
-		'solved_questions'   => array(),
-		'used_questions'     => array(),
-		'correct_answers'    => array(),
-		'wrong_answers'      => array(),
-		'question_times'     => array(),
-		'exam_time'          => '',
-		'exam_status'        => 'pending',
-	);
-
-	// Get question data
-	$question_data = wpexams_get_post_data( $question_id );
-
-	if ( empty( $question_data->question_fields ) ) {
-		return false;
-	}
-
-	// Determine if answer is correct
-	$correct_option = $question_data->question_fields['correct_option'];
-	$is_correct     = ( $correct_option === 'wpexams_c_option_' . $user_answer );
-
-	// Check if this question was already answered (prevent duplicates)
-	$already_answered = false;
-	if ( isset( $result['solved_questions'] ) && is_array( $result['solved_questions'] ) ) {
-		$already_answered = in_array( (string) $question_id, $result['solved_questions'], true );
-	}
-
-	// Only save if not already answered
-	if ( ! $already_answered ) {
-		// Update result
-		$result['solved_questions'][] = (string) $question_id;
-		$result['used_questions'][]   = (string) $question_id;
-		$result['question_times'][]   = array(
-			'question_id' => (string) $question_id,
-			'time'        => $question_time,
-		);
-
-		if ( $is_correct ) {
-			$result['correct_answers'][] = array(
-				'question_id' => $question_id,
-				'answer'      => $user_answer,
-			);
-		} else {
-			$result['wrong_answers'][] = array(
-				'question_id' => $question_id,
-				'answer'      => $user_answer,
-			);
-		}
-
-		// Remove duplicates
-		$result['solved_questions'] = array_unique( $result['solved_questions'] );
-		$result['used_questions']   = array_unique( $result['used_questions'] );
-	}
-
-	$result['exam_time'] = $exam_time;
-
-	// Set total questions if not set
-	if ( ! isset( $result['total_questions'] ) ) {
-		$exam_detail = wpexams_get_post_data( $exam_id )->exam_detail;
-		$result['total_questions'] = isset( $exam_detail['question_count'] ) ? $exam_detail['question_count'] : count( $exam_detail['filtered_questions'] );
-	}
-
-	/**
-	 * Fires after answer is saved
-	 *
-	 * @since 1.0.0
-	 * @param int    $question_id Question ID.
-	 * @param string $user_answer User's answer.
-	 * @param bool   $is_correct  Whether answer is correct.
-	 * @param int    $exam_id     Exam ID.
-	 */
-	do_action( 'wpexams_answer_saved', $question_id, $user_answer, $is_correct, $exam_id );
-
-	// Save result
-	return update_post_meta( $exam_id, 'wpexams_exam_result', $result );
-}
-
-/**
  * Check if exam is complete
  *
  * @since 1.0.0
@@ -449,7 +353,7 @@ function wpexams_generate_exam_result( $exam_id, $exam_time ) {
 	if ( isset( $exam_detail['is_timed'] ) && '1' === $exam_detail['is_timed'] && 'expired' !== $exam_time ) {
 		// Calculate time taken = total allocated time - remaining time
 		$general_settings = wpexams_get_setting( 'general' );
-		$question_time_seconds = isset( $general_settings['question_time_seconds'] ) ? $general_settings['question_time_seconds'] : 82;
+		$question_time_seconds = isset( $general_settings['question_time_seconds'] ) ? $general_settings['question_time_seconds'] : 60;
 		$total_questions = isset( $result['total_questions'] ) ? $result['total_questions'] : 0;
 		$total_allocated_seconds = $question_time_seconds * $total_questions;
 		
@@ -500,7 +404,6 @@ function wpexams_generate_exam_result( $exam_id, $exam_time ) {
 	
 	// Clean up arrays to remove any duplicates before saving
 	$result['solved_questions'] = array_values( $solved_unique );
-	$result['used_questions']   = array_values( array_unique( $result['used_questions'] ) );
 
 	update_post_meta( $exam_id, 'wpexams_exam_result', $result );
 	update_post_meta( $exam_id, 'wpexams_exam_status', 'Completed' );

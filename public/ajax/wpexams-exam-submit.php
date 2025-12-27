@@ -1,6 +1,6 @@
 <?php
 /**
- * Submit answer immediately AJAX handler - FIXED VERSION (Issue #3)
+ * Submit answer immediately AJAX handler
  *
  * @package WPExams
  * @since 1.0.0
@@ -92,9 +92,6 @@ function wpexams_ajax_submit_answer() {
 	if ( ! isset( $exam_result['solved_questions'] ) ) {
 		$exam_result['solved_questions'] = array();
 	}
-	if ( ! isset( $exam_result['used_questions'] ) ) {
-		$exam_result['used_questions'] = array();
-	}
 	if ( ! isset( $exam_result['question_times'] ) ) {
 		$exam_result['question_times'] = array();
 	}
@@ -111,7 +108,6 @@ function wpexams_ajax_submit_answer() {
 				'explanation'      => $question_data->question_fields['description'],
 				'exam_time'        => $exam_time,
 				'solved_questions' => array_values( $exam_result['solved_questions'] ),
-				'used_questions'   => array_values( $exam_result['used_questions'] ),
 				'total_questions'  => $total_questions,
 				'current_index'    => array_search( (int) $question_id, $exam_detail['filtered_questions'], true ),
 				'progress_percent' => round( ( ( array_search( (int) $question_id, $exam_detail['filtered_questions'], true ) + 1 ) / $total_questions ) * 100 ),
@@ -144,7 +140,6 @@ function wpexams_ajax_submit_answer() {
 
 	// Remove duplicates
 	$exam_result['solved_questions'] = array_unique( $exam_result['solved_questions'] );
-	$exam_result['used_questions']   = array_unique( $exam_result['used_questions'] );
 
 	// Update exam time and status
 	$exam_result['exam_time']      = $exam_time;
@@ -188,7 +183,6 @@ function wpexams_ajax_submit_answer() {
 		'explanation'      => $question_data->question_fields['description'],
 		'exam_time'        => $exam_time,
 		'solved_questions' => array_values( $exam_result['solved_questions'] ),
-		'used_questions'   => array_values( $exam_result['used_questions'] ),
 		'total_questions'  => $total_questions,
 		'current_index'    => $current_index,
 		'progress_percent' => $progress_percent,

@@ -78,8 +78,8 @@ function wpexams_enqueue_frontend_scripts() {
 				'showResult'        => __( 'Show Result', 'wpexams' ),
 				'previous'          => __( 'Previous', 'wpexams' ),
 				'examCompleted'     => __( 'Exam Completed!', 'wpexams' ),
-				'reviewAnswers'     => __( 'Review Answers', 'wpexams' ),
 				'viewHistory'       => __( 'View History', 'wpexams' ),
+				'reviewExam'       => __( 'Review Exam', 'wpexams' ),
 				'backToHome'        => __( 'Back to Home', 'wpexams' ),
 			),
 		)

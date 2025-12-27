@@ -70,9 +70,6 @@ function wpexams_ajax_exam_expired() {
 	if ( ! isset( $exam_result['question_times'] ) ) {
 		$exam_result['question_times'] = array();
 	}
-	if ( ! isset( $exam_result['used_questions'] ) ) {
-		$exam_result['used_questions'] = array();
-	}
 
 	// Get unanswered questions
 	$filtered_questions = isset( $exam_result['filtered_questions'] ) ? $exam_result['filtered_questions'] : $exam_detail['filtered_questions'];
@@ -86,8 +83,7 @@ function wpexams_ajax_exam_expired() {
 		);
 
 		$exam_result['solved_questions'][] = (string) $question_id;
-		$exam_result['used_questions'][]   = (string) $question_id;
-
+	
 		$exam_result['question_times'][] = array(
 			'question_id' => (string) $question_id,
 			'time'        => 'expired',
@@ -96,8 +92,7 @@ function wpexams_ajax_exam_expired() {
 
 	// Remove duplicates
 	$exam_result['solved_questions'] = array_unique( $exam_result['solved_questions'] );
-	$exam_result['used_questions']   = array_unique( $exam_result['used_questions'] );
-
+	
 	// Mark exam as completed and expired
 	$exam_result['exam_status'] = 'completed';
 	$exam_result['exam_time']   = 'expired';
