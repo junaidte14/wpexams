@@ -20,6 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 function wpexams_result_custom_columns( $columns ) {
 	$columns['wpexams_exam']      = __( 'Exam', 'wpexams' );
 	$columns['wpexams_user']      = __( 'User', 'wpexams' );
+    $columns['wpexams_type']      = __( 'Type', 'wpexams' );
 	$columns['wpexams_score']     = __( 'Score', 'wpexams' );
 	$columns['wpexams_status']    = __( 'Status', 'wpexams' );
 	$columns['wpexams_questions'] = __( '#Questions', 'wpexams' );
@@ -53,6 +54,25 @@ function wpexams_result_column_content( $column, $post_id ) {
 		$user = get_userdata( $author_id );
 		if ( $user ) {
 			echo '<a href="' . esc_url( get_edit_user_link( $author_id ) ) . '">' . esc_html( $user->display_name ) . '</a>';
+		}
+	}
+
+	if ( 'wpexams_type' === $column ) {
+		$result_data = wpexams_get_post_data( $post_id );
+		$exam_detail = $result_data->exam_detail;
+		
+		if ( $exam_detail && isset( $exam_detail['role'] ) ) {
+			$type = $exam_detail['role'];
+			$label = 'admin_defined' === $type ? __( 'Predefined', 'wpexams' ) : __( 'User Defined', 'wpexams' );
+			$color = 'admin_defined' === $type ? '#0073aa' : '#666';
+			
+			printf(
+				'<span style="color: %s; font-weight: 600;">%s</span>',
+				esc_attr( $color ),
+				esc_html( $label )
+			);
+		} else {
+			echo '—';
 		}
 	}
 

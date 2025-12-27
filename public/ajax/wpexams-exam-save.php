@@ -153,22 +153,31 @@ function wpexams_ajax_save_exam() {
 	$exam_result = array(
 		'filtered_questions' => $question_ids,
 		'user_id'            => get_current_user_id(),
+		'exam_id'            => 0, // No original exam
+		'exam_status'        => 'pending',
+		'solved_questions'   => array(),
+		'used_questions'     => array(),
+		'correct_answers'    => array(),
+		'wrong_answers'      => array(),
+		'question_times'     => array(),
+		'total_questions'    => $question_count,
 	);
-	update_post_meta( $exam_id, 'wpexams_exam_result', $exam_result );
+	update_post_meta( $result_id, 'wpexams_exam_result', $exam_result );
+	update_post_meta( $result_id, 'wpexams_exam_status', 'Pending' );
 
 	/**
 	 * Fires after user exam is created
 	 *
 	 * @since 2.0.0
-	 * @param int   $exam_id     Exam ID.
+	 * @param int   $result_id   Result ID.
 	 * @param array $exam_detail Exam detail.
 	 */
-	do_action( 'wpexams_user_exam_created', $exam_id, $exam_detail );
+	do_action( 'wpexams_user_exam_created', $result_id, $exam_detail );
 
-	// Return success with exam ID
+	// Return success with result ID
 	wp_send_json_success(
 		array(
-			'exam_id' => $exam_id,
+			'exam_id' => $result_id,
 			'message' => __( 'Exam created successfully!', 'wpexams' ),
 		)
 	);

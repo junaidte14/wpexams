@@ -72,20 +72,18 @@ if ( $is_predefined ) {
 	}
 }
 
-// Check if exam should be resumed or started fresh
-if ( $exam_result && isset( $exam_result['solved_questions'] ) && (int) $exam_result['user_id'] === $current_user_id ) {
-	// For result posts that are completed, don't allow resume
-	if ( get_post_type( $exam_id ) === 'wpexams_result' && isset( $exam_result['exam_status'] ) && 'completed' === $exam_result['exam_status'] ) {
-		echo '<p>' . esc_html__( 'This exam has already been completed.', 'wpexams' ) . ' ';
-		echo '<a href="?wpexams_review_id=' . esc_attr( $exam_id ) . '">' . esc_html__( 'Review your answers', 'wpexams' ) . '</a></p>';
-		return;
-	}
-	
-	// Resume pending exam (only for user_defined or pending result posts)
-	if ( 'admin_defined' !== $exam_detail['role'] ) {
-		wpexams_load_template( 'exam-resume', compact( 'exam_id', 'exam_post', 'exam_result', 'exam_detail', 'current_user_id', 'question_time_seconds', 'show_progressbar' ) );
-		return;
-	}
+// Check if exam is already completed
+if ( $exam_result && isset( $exam_result['exam_status'] ) && 'completed' === $exam_result['exam_status'] ) {
+	echo '<p>' . esc_html__( 'This exam has already been completed.', 'wpexams' ) . ' ';
+	echo '<a href="?wpexams_review_id=' . esc_attr( $exam_id ) . '">' . esc_html__( 'Review your answers', 'wpexams' ) . '</a></p>';
+	return;
+}
+
+// Check if exam should be resumed
+if ( $exam_result && isset( $exam_result['solved_questions'] ) && ! empty( $exam_result['solved_questions'] ) ) {
+	// Resume pending exam
+	wpexams_load_template( 'exam-resume', compact( 'exam_id', 'exam_post', 'exam_result', 'exam_detail', 'current_user_id', 'question_time_seconds', 'show_progressbar' ) );
+	return;
 }
 
 // Get question count
@@ -222,16 +220,18 @@ $show_answer_immediately = isset( $exam_detail['show_answer_immediately'] ) ? $e
 
 <script>
 jQuery(document).ready(function($) {
-	// Initialize timers
-	<?php if ( '1' === $exam_detail['is_timed'] ) : ?>
+	// FIXED: Initialize timers based on is_timed setting from exam_detail
+	<?php if ( $is_timed ) : ?>
+		// Timed exam - count DOWN from allocated time
 		var examTime = <?php echo absint( $exam_time_seconds ); ?>;
 		var examHms = wpexamsConvertSecondsToHms(examTime);
 		wpexamsTimedQuizCountdownTimer(parseInt(examHms.hrs), parseInt(examHms.min), parseInt(examHms.sec), "wpexamsTimedTimer");
 	<?php else : ?>
+		// Untimed exam - count UP from zero
 		wpexamsUntimedQuizCountdownTimer(0, 0, 0, "wpexamsUntimedTimer");
 	<?php endif; ?>
 	
-	// Initialize question timer
+	// Initialize question timer (always counts UP)
 	wpexamsQuestionCountdownTimer(0, 0, 0, "wpexamsQuestionTimer");
 });
 </script>

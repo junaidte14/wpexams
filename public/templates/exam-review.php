@@ -75,7 +75,9 @@ $total_questions = $exam_result['total_questions'];
 			?>
 		</h5>
 		<?php if ( isset( $exam_result['exam_time'] ) && 'expired' !== $exam_result['exam_time'] ) : ?>
-			<span><?php echo esc_html( $exam_result['exam_time'] ); ?></span>
+			<span><strong><?php esc_html_e( 'Time Taken:', 'wpexams' ); ?></strong> <?php echo esc_html( $exam_result['exam_time'] ); ?></span>
+		<?php elseif ( 'expired' === $exam_result['exam_time'] ) : ?>
+			<span style="color: #f44336;"><strong><?php esc_html_e( 'Status:', 'wpexams' ); ?></strong> <?php esc_html_e( 'Expired', 'wpexams' ); ?></span>
 		<?php endif; ?>
 	</div>
 

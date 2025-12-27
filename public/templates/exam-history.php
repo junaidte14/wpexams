@@ -57,7 +57,9 @@ if ( isset( $_GET['wpexams_history_id'] ) ) {
 				?>
 			</h5>
 			<?php if ( 'expired' !== $exam_time ) : ?>
-				<span><?php echo esc_html( $exam_time ); ?></span>
+				<span><strong><?php esc_html_e( 'Time Taken:', 'wpexams' ); ?></strong> <?php echo esc_html( $exam_time ); ?></span>
+			<?php else : ?>
+				<span style="color: #f44336;"><strong><?php esc_html_e( 'Status:', 'wpexams' ); ?></strong> <?php esc_html_e( 'Expired', 'wpexams' ); ?></span>
 			<?php endif; ?>
 		</div>
 

@@ -440,10 +440,30 @@ function wpexams_is_exam_complete( $exam_id, $question_id, $exam_detail ) {
 function wpexams_generate_exam_result( $exam_id, $exam_time ) {
 	$exam_data = wpexams_get_post_data( $exam_id );
 	$result    = $exam_data->exam_result;
+	$exam_detail = $exam_data->exam_detail;
 
 	// Mark as complete
 	$result['exam_status'] = 'completed';
-	$result['exam_time']   = $exam_time;
+	
+	// FIXED: For timed exams, convert remaining time to time TAKEN
+	if ( isset( $exam_detail['is_timed'] ) && '1' === $exam_detail['is_timed'] && 'expired' !== $exam_time ) {
+		// Calculate time taken = total allocated time - remaining time
+		$general_settings = wpexams_get_setting( 'general' );
+		$question_time_seconds = isset( $general_settings['question_time_seconds'] ) ? $general_settings['question_time_seconds'] : 82;
+		$total_questions = isset( $result['total_questions'] ) ? $result['total_questions'] : 0;
+		$total_allocated_seconds = $question_time_seconds * $total_questions;
+		
+		// Convert remaining time to seconds
+		$remaining_seconds = wpexams_time_to_seconds( $exam_time );
+		
+		// Calculate time taken
+		$time_taken_seconds = $total_allocated_seconds - $remaining_seconds;
+		
+		// Convert back to HH:MM:SS
+		$exam_time = wpexams_seconds_to_time( $time_taken_seconds );
+	}
+	
+	$result['exam_time'] = $exam_time;
 
 	// FIXED: Calculate score based on UNIQUE solved questions only
 	// Use solved_questions array (which should have no duplicates) as the source of truth

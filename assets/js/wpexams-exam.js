@@ -438,7 +438,7 @@
         html += '<div style="font-size: 24px; margin: 10px 0; color: #555;">Score: ' + correctCount + '/' + totalCount + '</div>';
         
         if (examTime !== 'expired') {
-            html += '<div style="font-size: 18px; color: #666;">Time: ' + examTime + '</div>';
+            html += '<div style="font-size: 18px; color: #666;">Time Taken: ' + examTime + '</div>';
         } else {
             html += '<div style="font-size: 18px; color: #f44336;">Time Expired</div>';
         }
