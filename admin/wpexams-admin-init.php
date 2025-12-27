@@ -18,6 +18,7 @@ require_once WPEXAMS_PLUGIN_DIR . 'admin/metaboxes/wpexams-question-metabox.php'
 require_once WPEXAMS_PLUGIN_DIR . 'admin/metaboxes/wpexams-exam-metabox.php';
 require_once WPEXAMS_PLUGIN_DIR . 'admin/columns/wpexams-exam-columns.php';
 require_once WPEXAMS_PLUGIN_DIR . 'admin/columns/wpexams-exam-filters.php';
+require_once WPEXAMS_PLUGIN_DIR . 'admin/columns/wpexams-result-columns.php';
 require_once WPEXAMS_PLUGIN_DIR . 'admin/ajax/wpexams-admin-ajax.php';
 require_once WPEXAMS_PLUGIN_DIR . 'admin/pages/wpexams-dashboard.php';
 require_once WPEXAMS_PLUGIN_DIR . 'admin/pages/wpexams-settings-general.php';

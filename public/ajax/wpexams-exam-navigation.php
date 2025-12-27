@@ -65,17 +65,29 @@ function wpexams_ajax_exam_navigation() {
         );
     }
 
-    // FIXED: For predefined (admin_defined) exams, ensure user exam instance exists
-    // This is done ONCE at the start, not on every question submission
-    if ( isset( $exam_data->exam_detail['role'] ) && 'admin_defined' === $exam_data->exam_detail['role'] ) {
-        // Check if this is the original predefined exam or already a user instance
-        $is_original = ! get_post_meta( $exam_id, 'wpexams_original_exam_id', true );
+    // FIXED: Handle predefined exams using result posts (new architecture)
+    $result_post_id = null;
+    $is_predefined = isset( $exam_data->exam_detail['role'] ) && 'admin_defined' === $exam_data->exam_detail['role'];
+    
+    if ( $is_predefined ) {
+        // Check if this is already a result post
+        $post_type = get_post_type( $exam_id );
         
-        if ( $is_original ) {
-            // This is the original predefined exam, create user instance
-            $exam_id = wpexams_ensure_user_exam_instance( $exam_id, get_current_user_id() );
+        if ( 'wpexams_exam' === $post_type ) {
+            // This is the original predefined exam, get or create result post
+            $result_post_id = wpexams_get_pending_result( $exam_id, get_current_user_id() );
             
-            // Refresh exam data with user instance
+            if ( ! $result_post_id ) {
+                // Create new result post
+                $result_post_id = wpexams_create_exam_result( $exam_id, get_current_user_id(), $exam_data->exam_detail );
+                
+                if ( ! $result_post_id ) {
+                    wp_send_json_error( array( 'message' => __( 'Failed to create exam result.', 'wpexams' ) ) );
+                }
+            }
+            
+            // Switch to using result post ID for all operations
+            $exam_id = $result_post_id;
             $exam_data = wpexams_get_post_data( $exam_id );
         }
     }
@@ -95,26 +107,14 @@ function wpexams_ajax_exam_navigation() {
         return;
     }
 
-    // 1. Save current answer before moving to the next question
-    if ( 'null' !== $user_answer ) {
-        wpexams_save_exam_answer(
-            $exam_id,
-            $question_id,
-            $user_answer,
-            $exam_time,
-            $question_time,
-            $show_immediate
-        );
-    }
-
-    // 2. Determine the Next/Prev ID using the helper function
+    // Determine the Next/Prev ID using the helper function
     $next_question_info = wpexams_get_next_question_id(
         $question_id,
         $exam_data->exam_detail,
         $action_type
     );
 
-    // 3. Logic for handling end-of-exam or beginning-of-exam
+    // Logic for handling end-of-exam or beginning-of-exam
     if ( ! $next_question_info ) {
         if ( 'next' === $action_type ) {
             // No more questions forward: trigger result screen
@@ -445,22 +445,42 @@ function wpexams_generate_exam_result( $exam_id, $exam_time ) {
 	$result['exam_status'] = 'completed';
 	$result['exam_time']   = $exam_time;
 
-	// Calculate score
+	// FIXED: Calculate score based on UNIQUE solved questions only
+	// Use solved_questions array (which should have no duplicates) as the source of truth
+	$total_count = isset( $result['total_questions'] ) ? $result['total_questions'] : count( $result['filtered_questions'] );
+	
+	// Get unique solved questions
+	$solved_unique = array_unique( $result['solved_questions'] );
+	
+	// Count correct answers by checking each solved question
 	$correct_count = 0;
+	$correct_question_ids = array();
+	
+	// Build array of question IDs that were answered correctly
 	if ( isset( $result['correct_answers'] ) && is_array( $result['correct_answers'] ) ) {
 		foreach ( $result['correct_answers'] as $answer ) {
-			if ( isset( $answer['answer'] ) && 'null' !== $answer['answer'] ) {
-				$correct_count++;
+			if ( isset( $answer['question_id'] ) && isset( $answer['answer'] ) && 'null' !== $answer['answer'] ) {
+				$correct_question_ids[] = (string) $answer['question_id'];
 			}
 		}
 	}
-
-	$total_count = isset( $result['total_questions'] ) ? $result['total_questions'] : count( $result['filtered_questions'] );
-	$percentage  = $total_count > 0 ? ( $correct_count / $total_count ) * 100 : 0;
+	
+	// Remove duplicates from correct answers
+	$correct_question_ids = array_unique( $correct_question_ids );
+	
+	// Count only unique correct answers
+	$correct_count = count( $correct_question_ids );
+	
+	// Calculate percentage
+	$percentage = $total_count > 0 ? ( $correct_count / $total_count ) * 100 : 0;
 
 	$result['score_percentage'] = round( $percentage, 2 );
 	$result['correct_count']    = $correct_count;
 	$result['total_count']      = $total_count;
+	
+	// Clean up arrays to remove any duplicates before saving
+	$result['solved_questions'] = array_values( $solved_unique );
+	$result['used_questions']   = array_values( array_unique( $result['used_questions'] ) );
 
 	update_post_meta( $exam_id, 'wpexams_exam_result', $result );
 	update_post_meta( $exam_id, 'wpexams_exam_status', 'Completed' );
@@ -489,10 +509,6 @@ function wpexams_generate_exam_result( $exam_id, $exam_time ) {
  * @param string $user_answer   User's answer.
  */
 function wpexams_handle_exam_exit( $exam_id, $question_id, $exam_time, $question_time, $user_answer ) {
-	// Save current answer if provided
-	if ( 'null' !== $user_answer ) {
-		wpexams_save_exam_answer( $exam_id, $question_id, $user_answer, $exam_time, $question_time, '0' );
-	}
 
 	// Mark exit question
 	$exam_data = wpexams_get_post_data( $exam_id );

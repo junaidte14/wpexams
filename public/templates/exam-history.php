@@ -29,24 +29,31 @@ if ( isset( $_GET['wpexams_history_id'] ) ) {
 
 	// Calculate score
 	$correct_count = 0;
-	if ( isset( $exam_result['correct_answers'] ) ) {
+	$correct_question_ids = array();
+	
+	if ( isset( $exam_result['correct_answers'] ) && is_array( $exam_result['correct_answers'] ) ) {
 		foreach ( $exam_result['correct_answers'] as $answer ) {
-			if ( 'null' !== $answer['answer'] ) {
-				$correct_count++;
+			if ( isset( $answer['question_id'] ) && isset( $answer['answer'] ) && 'null' !== $answer['answer'] ) {
+				$correct_question_ids[] = (string) $answer['question_id'];
 			}
 		}
 	}
+	
+	// Remove duplicates and count
+	$correct_question_ids = array_unique( $correct_question_ids );
+	$correct_count = count( $correct_question_ids );
 
 	$total_questions = isset( $exam_result['total_questions'] ) ? $exam_result['total_questions'] : 0;
 	$exam_time       = isset( $exam_result['exam_time'] ) ? $exam_result['exam_time'] : '00:00:00';
+	$percentage      = $total_questions > 0 ? round( ( $correct_count / $total_questions ) * 100 ) : 0;
 
 	?>
 	<div class="wpexams-content">
 		<div class='wpexams-d-flex wpexams-m-tb-20'>
 			<h5 class='wpexams-m-0'>
 				<?php
-				/* translators: 1: correct answers, 2: total questions */
-				printf( esc_html__( 'Score %1$d/%2$d', 'wpexams' ), $correct_count, $total_questions );
+				/* translators: 1: correct answers, 2: total questions, 3: percentage */
+				printf( esc_html__( 'Score %1$d/%2$d (%3$d%%)', 'wpexams' ), $correct_count, $total_questions, $percentage );
 				?>
 			</h5>
 			<?php if ( 'expired' !== $exam_time ) : ?>
@@ -142,10 +149,9 @@ if ( isset( $_GET['wpexams_history_id'] ) ) {
 	<p><?php esc_html_e( 'History of exams that you have taken.', 'wpexams' ); ?></p>
 
 	<?php
-	// Get user's exams - FIXED: Show both user_defined and admin_defined exams that have been completed
-	$user_exams = new WP_Query(
+	$user_results = new WP_Query(
 		array(
-			'post_type'      => 'wpexams_exam',
+			'post_type'      => array( 'wpexams_exam', 'wpexams_result' ),
 			'author'         => $current_user_id,
 			'posts_per_page' => -1,
 			'post_status'    => 'publish',
@@ -154,12 +160,13 @@ if ( isset( $_GET['wpexams_history_id'] ) ) {
 		)
 	);
 
-	if ( $user_exams->have_posts() ) :
+	if ( $user_results->have_posts() ) :
 		?>
 		<table class='wpexams-data-table'>
 			<thead>
 				<tr>
 					<th><?php esc_html_e( 'Date', 'wpexams' ); ?></th>
+					<th><?php esc_html_e( 'Exam', 'wpexams' ); ?></th>
 					<th><?php esc_html_e( '#Questions', 'wpexams' ); ?></th>
 					<th><?php esc_html_e( 'Type', 'wpexams' ); ?></th>
 					<th><?php esc_html_e( 'Status', 'wpexams' ); ?></th>
@@ -167,17 +174,17 @@ if ( isset( $_GET['wpexams_history_id'] ) ) {
 				</tr>
 			</thead>
 			<tbody>
-				<?php while ( $user_exams->have_posts() ) : ?>
+				<?php while ( $user_results->have_posts() ) : ?>
 					<?php
-					$user_exams->the_post();
-					$exam_id = get_the_ID();
+					$user_results->the_post();
+					$result_id = get_the_ID();
+					$post_type = get_post_type( $result_id );
 					
-					$exam_data   = wpexams_get_post_data( $exam_id );
+					$exam_data   = wpexams_get_post_data( $result_id );
 					$exam_result = $exam_data->exam_result;
 					$exam_detail = $exam_data->exam_detail;
 
-					// FIXED: Show both user_defined and admin_defined exams with results
-					// Skip only if there's no result data at all
+					// Skip if no result data
 					if ( ! $exam_result || ! isset( $exam_result['exam_status'] ) || ! $exam_detail ) {
 						continue;
 					}
@@ -185,42 +192,71 @@ if ( isset( $_GET['wpexams_history_id'] ) ) {
 					$total_questions = isset( $exam_result['total_questions'] ) ? $exam_result['total_questions'] : 0;
 					$exam_status     = $exam_result['exam_status'];
 
-					// Calculate correct answers
-					$correct_count = 0;
-					if ( isset( $exam_result['correct_answers'] ) ) {
-						foreach ( $exam_result['correct_answers'] as $answer ) {
-							if ( 'null' !== $answer['answer'] ) {
-								$correct_count++;
+					// Get exam name
+					$exam_name = get_the_title( $result_id );
+					
+					// For result posts, get original exam name
+					if ( 'wpexams_result' === $post_type ) {
+						$original_exam_id = get_post_meta( $result_id, 'wpexams_exam_id', true );
+						if ( $original_exam_id ) {
+							$original_exam = get_post( $original_exam_id );
+							if ( $original_exam ) {
+								$exam_name = $original_exam->post_title;
 							}
 						}
 					}
+
+					// Calculate correct answers using unique question IDs only
+					$correct_count = 0;
+					$correct_question_ids = array();
+					
+					if ( isset( $exam_result['correct_answers'] ) && is_array( $exam_result['correct_answers'] ) ) {
+						foreach ( $exam_result['correct_answers'] as $answer ) {
+							if ( isset( $answer['question_id'] ) && isset( $answer['answer'] ) && 'null' !== $answer['answer'] ) {
+								$correct_question_ids[] = (string) $answer['question_id'];
+							}
+						}
+					}
+					
+					// Remove duplicates and count
+					$correct_question_ids = array_unique( $correct_question_ids );
+					$correct_count = count( $correct_question_ids );
+					
+					// Calculate percentage
+					$percentage = $total_questions > 0 ? round( ( $correct_count / $total_questions ) * 100 ) : 0;
+					
+					// Determine type
+					$type_label = 'admin_defined' === $exam_detail['role'] ? __( 'Predefined', 'wpexams' ) : __( 'User Defined', 'wpexams' );
 					?>
 					<tr>
 						<td data-label="<?php esc_attr_e( 'Date', 'wpexams' ); ?>">
 							<?php echo esc_html( get_the_date( 'Y-m-d' ) . ' ' . get_the_time( 'H:i:s' ) ); ?>
 						</td>
+						<td data-label="<?php esc_attr_e( 'Exam', 'wpexams' ); ?>">
+							<?php echo esc_html( $exam_name ); ?>
+						</td>
 						<td data-label="<?php esc_attr_e( '#Questions', 'wpexams' ); ?>">
 							<?php echo esc_html( $total_questions ); ?>
 						</td>
 						<td data-label="<?php esc_attr_e( 'Type', 'wpexams' ); ?>">
-							<?php echo 'admin_defined' === $exam_detail['role'] ? esc_html__( 'Predefined', 'wpexams' ) : esc_html__( 'User Defined', 'wpexams' ); ?>
+							<?php echo esc_html( $type_label ); ?>
 						</td>
 						<td data-label="<?php esc_attr_e( 'Status', 'wpexams' ); ?>">
 							<?php echo esc_html( ucfirst( $exam_status ) ); ?>
 						</td>
 						<td data-label="<?php esc_attr_e( 'Score', 'wpexams' ); ?>">
 							<?php if ( 'pending' === $exam_status ) : ?>
-								<a href='?wpexams_exam_id=<?php echo esc_attr( $exam_id ); ?>'>
+								<a href='?wpexams_exam_id=<?php echo esc_attr( $result_id ); ?>'>
 									<?php esc_html_e( 'Continue', 'wpexams' ); ?>
 								</a>
 							<?php else : ?>
-								<a href='?wpexams_history&wpexams_history_id=<?php echo esc_attr( $exam_id ); ?>'>
+								<a href='?wpexams_history&wpexams_history_id=<?php echo esc_attr( $result_id ); ?>'>
 									<?php
-									/* translators: 1: correct answers, 2: total questions */
-									printf( esc_html__( 'Score %1$d/%2$d', 'wpexams' ), $correct_count, $total_questions );
+									/* translators: 1: correct answers, 2: total questions, 3: percentage */
+									printf( esc_html__( '%1$d/%2$d (%3$d%%)', 'wpexams' ), $correct_count, $total_questions, $percentage );
 									?>
 								</a>
-								<a href='?wpexams_review_id=<?php echo esc_attr( $exam_id ); ?>' style="margin-left: 10px;">
+								<a href='?wpexams_review_id=<?php echo esc_attr( $result_id ); ?>' style="margin-left: 10px;">
 									<?php esc_html_e( 'Review', 'wpexams' ); ?>
 								</a>
 							<?php endif; ?>

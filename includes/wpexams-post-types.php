@@ -107,3 +107,51 @@ function wpexams_register_exam_post_type() {
 	register_post_type( 'wpexams_exam', $args );
 }
 add_action( 'init', 'wpexams_register_exam_post_type' );
+
+/**
+ * Register Exam Results post type
+ */
+function wpexams_register_result_post_type() {
+	$labels = array(
+		'name'               => _x( 'Exam Results', 'post type general name', 'wpexams' ),
+		'singular_name'      => _x( 'Exam Result', 'post type singular name', 'wpexams' ),
+		'menu_name'          => _x( 'Results', 'admin menu', 'wpexams' ),
+		'add_new'            => _x( 'Add New', 'result', 'wpexams' ),
+		'add_new_item'       => __( 'Add New Result', 'wpexams' ),
+		'edit_item'          => __( 'Edit Result', 'wpexams' ),
+		'new_item'           => __( 'New Result', 'wpexams' ),
+		'view_item'          => __( 'View Result', 'wpexams' ),
+		'search_items'       => __( 'Search Results', 'wpexams' ),
+		'not_found'          => __( 'No results found', 'wpexams' ),
+		'not_found_in_trash' => __( 'No results found in Trash', 'wpexams' ),
+		'parent_item_colon'  => __( 'Parent Result:', 'wpexams' ),
+		'all_items'          => __( 'All Results', 'wpexams' ),
+	);
+
+	$args = array(
+		'labels'             => $labels,
+		'public'             => false,
+		'publicly_queryable' => false,
+		'show_ui'            => true,
+		'show_in_menu'       => false, // Will be added as submenu
+		'query_var'          => true,
+		'rewrite'            => array( 'slug' => 'exam-result' ),
+		'capability_type'    => 'post',
+		'has_archive'        => false,
+		'hierarchical'       => false,
+		'menu_position'      => null,
+		'supports'           => array( 'title', 'author' ),
+		'show_in_rest'       => false,
+	);
+
+	/**
+	 * Filter result post type args
+	 *
+	 * @since 1.0.0
+	 * @param array $args Post type registration arguments.
+	 */
+	$args = apply_filters( 'wpexams_result_post_type_args', $args );
+
+	register_post_type( 'wpexams_result', $args );
+}
+add_action( 'init', 'wpexams_register_result_post_type' );

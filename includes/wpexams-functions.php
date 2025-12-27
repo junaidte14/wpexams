@@ -295,3 +295,140 @@ function wpexams_log( $message ) {
 		error_log( '[WP Exams] ' . $message );
 	}
 }
+
+/**
+ * Create exam result post when user takes an exam
+ *
+ * @since 1.0.0
+ * @param int   $exam_id    Original exam ID (predefined exam).
+ * @param int   $user_id    User ID taking the exam.
+ * @param array $exam_detail Exam detail data.
+ * @return int|false Result post ID on success, false on failure.
+ */
+function wpexams_create_exam_result( $exam_id, $user_id, $exam_detail ) {
+	// Get exam post
+	$exam_post = get_post( $exam_id );
+	
+	if ( ! $exam_post ) {
+		return false;
+	}
+
+	// Count user's attempts for this exam
+	$attempt_count = wpexams_get_user_attempt_count( $exam_id, $user_id );
+	$attempt_number = $attempt_count + 1;
+
+	// Create result post
+	$result_id = wp_insert_post(
+		array(
+			'post_title'  => sprintf(
+				/* translators: 1: exam title, 2: attempt number */
+				__( '%1$s - Attempt #%2$d', 'wpexams' ),
+				$exam_post->post_title,
+				$attempt_number
+			),
+			'post_type'   => 'wpexams_result',
+			'post_status' => 'publish',
+			'post_author' => $user_id,
+		)
+	);
+
+	if ( is_wp_error( $result_id ) ) {
+		return false;
+	}
+
+	// Save metadata
+	update_post_meta( $result_id, 'wpexams_exam_id', $exam_id ); // Reference to original exam
+	update_post_meta( $result_id, 'wpexams_exam_detail', $exam_detail );
+	
+	// Initialize exam result
+	$exam_result = array(
+		'filtered_questions' => isset( $exam_detail['filtered_questions'] ) ? $exam_detail['filtered_questions'] : $exam_detail['question_ids'],
+		'user_id'            => $user_id,
+		'exam_id'            => $exam_id,
+		'exam_status'        => 'pending',
+		'solved_questions'   => array(),
+		'used_questions'     => array(),
+		'correct_answers'    => array(),
+		'wrong_answers'      => array(),
+		'question_times'     => array(),
+		'total_questions'    => isset( $exam_detail['question_count'] ) ? $exam_detail['question_count'] : count( $exam_detail['filtered_questions'] ),
+		'attempt_number'     => $attempt_number,
+	);
+	
+	update_post_meta( $result_id, 'wpexams_exam_result', $exam_result );
+	update_post_meta( $result_id, 'wpexams_exam_status', 'Pending' );
+
+	/**
+	 * Fires after exam result post is created
+	 *
+	 * @since 1.0.0
+	 * @param int   $result_id   Result post ID.
+	 * @param int   $exam_id     Original exam ID.
+	 * @param int   $user_id     User ID.
+	 * @param array $exam_detail Exam detail.
+	 */
+	do_action( 'wpexams_exam_result_created', $result_id, $exam_id, $user_id, $exam_detail );
+
+	return $result_id;
+}
+
+/**
+ * Get user's attempt count for an exam
+ *
+ * @since 1.0.0
+ * @param int $exam_id Exam ID.
+ * @param int $user_id User ID.
+ * @return int Number of attempts.
+ */
+function wpexams_get_user_attempt_count( $exam_id, $user_id ) {
+	$results = get_posts(
+		array(
+			'post_type'      => 'wpexams_result',
+			'author'         => $user_id,
+			'posts_per_page' => -1,
+			'post_status'    => 'publish',
+			'meta_query'     => array(
+				array(
+					'key'   => 'wpexams_exam_id',
+					'value' => $exam_id,
+				),
+			),
+			'fields'         => 'ids',
+		)
+	);
+
+	return count( $results );
+}
+
+/**
+ * Check if user has pending result for exam
+ *
+ * @since 1.0.0
+ * @param int $exam_id Exam ID.
+ * @param int $user_id User ID.
+ * @return int|false Result ID if pending result exists, false otherwise.
+ */
+function wpexams_get_pending_result( $exam_id, $user_id ) {
+	$results = get_posts(
+		array(
+			'post_type'      => 'wpexams_result',
+			'author'         => $user_id,
+			'posts_per_page' => 1,
+			'post_status'    => 'publish',
+			'meta_query'     => array(
+				'relation' => 'AND',
+				array(
+					'key'   => 'wpexams_exam_id',
+					'value' => $exam_id,
+				),
+				array(
+					'key'   => 'wpexams_exam_status',
+					'value' => 'Pending',
+				),
+			),
+			'fields'         => 'ids',
+		)
+	);
+
+	return ! empty( $results ) ? $results[0] : false;
+}

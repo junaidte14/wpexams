@@ -99,13 +99,33 @@ function wpexams_ajax_submit_answer() {
 		$exam_result['question_times'] = array();
 	}
 
+	// CRITICAL: Check if this question was already answered to prevent duplicates
+	$already_answered = in_array( (string) $question_id, $exam_result['solved_questions'], true );
+	
+	if ( $already_answered ) {
+		// Question already answered - don't save again, just return current state
+		wp_send_json_success(
+			array(
+				'is_correct'       => false, // We don't know, but it's already saved
+				'correct_option'   => substr( $correct_option, -1 ),
+				'explanation'      => $question_data->question_fields['description'],
+				'exam_time'        => $exam_time,
+				'solved_questions' => array_values( $exam_result['solved_questions'] ),
+				'used_questions'   => array_values( $exam_result['used_questions'] ),
+				'total_questions'  => $total_questions,
+				'current_index'    => array_search( (int) $question_id, $exam_detail['filtered_questions'], true ),
+				'progress_percent' => round( ( ( array_search( (int) $question_id, $exam_detail['filtered_questions'], true ) + 1 ) / $total_questions ) * 100 ),
+			)
+		);
+	}
+
 	// Update question time
 	$exam_result['question_times'][] = array(
 		'question_id' => (string) $question_id,
 		'time'        => $question_time,
 	);
 
-	// Save answer
+	// Save answer (only if not already answered)
 	if ( $is_correct ) {
 		$exam_result['correct_answers'][] = array(
 			'question_id' => $question_id,
@@ -118,7 +138,7 @@ function wpexams_ajax_submit_answer() {
 		);
 	}
 
-	// Add to solved questions
+	// Add to solved questions (should not be duplicate due to check above)
 	$exam_result['solved_questions'][] = (string) $question_id;
 	$exam_result['used_questions'][]   = (string) $question_id;
 

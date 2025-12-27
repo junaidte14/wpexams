@@ -45,18 +45,43 @@ if ( empty( $exam_detail ) ) {
 	return;
 }
 
+// FIXED: Handle predefined exams using result posts (new architecture)
+$is_predefined = isset( $exam_detail['role'] ) && 'admin_defined' === $exam_detail['role'];
+$original_exam_id = $exam_id; // Keep track of original
+
+if ( $is_predefined ) {
+	$post_type = get_post_type( $exam_id );
+	
+	if ( 'wpexams_exam' === $post_type ) {
+		// This is the original predefined exam, check for pending result or create new
+		$result_post_id = wpexams_get_pending_result( $exam_id, $current_user_id );
+		
+		if ( ! $result_post_id ) {
+			// Create new result post
+			$result_post_id = wpexams_create_exam_result( $exam_id, $current_user_id, $exam_detail );
+			
+			if ( ! $result_post_id ) {
+				echo '<p>' . esc_html__( 'Failed to create exam result.', 'wpexams' ) . '</p>';
+				return;
+			}
+		}
+		
+		// Redirect to use result post ID
+		wp_safe_redirect( add_query_arg( 'wpexams_exam_id', $result_post_id, remove_query_arg( 'wpexams_exam_id' ) ) );
+		exit;
+	}
+}
+
 // Check if exam should be resumed or started fresh
 if ( $exam_result && isset( $exam_result['solved_questions'] ) && (int) $exam_result['user_id'] === $current_user_id ) {
-	// Check if it's a completed predefined exam - if so, show as new exam
-	if ( isset( $exam_detail['role'] ) && 'admin_defined' === $exam_detail['role'] && isset( $exam_result['exam_status'] ) && 'completed' === $exam_result['exam_status'] ) {
-		// This is a completed predefined exam, treat as new attempt
-		// Clear the exam_id to force new instance creation
-		unset( $_GET['wpexams_exam_id'] );
-		echo '<script>window.location.href = "' . esc_url( remove_query_arg( 'wpexams_exam_id' ) ) . '";</script>';
+	// For result posts that are completed, don't allow resume
+	if ( get_post_type( $exam_id ) === 'wpexams_result' && isset( $exam_result['exam_status'] ) && 'completed' === $exam_result['exam_status'] ) {
+		echo '<p>' . esc_html__( 'This exam has already been completed.', 'wpexams' ) . ' ';
+		echo '<a href="?wpexams_review_id=' . esc_attr( $exam_id ) . '">' . esc_html__( 'Review your answers', 'wpexams' ) . '</a></p>';
 		return;
 	}
 	
-	// Resume pending exam (only if not admin_defined)
+	// Resume pending exam (only for user_defined or pending result posts)
 	if ( 'admin_defined' !== $exam_detail['role'] ) {
 		wpexams_load_template( 'exam-resume', compact( 'exam_id', 'exam_post', 'exam_result', 'exam_detail', 'current_user_id', 'question_time_seconds', 'show_progressbar' ) );
 		return;

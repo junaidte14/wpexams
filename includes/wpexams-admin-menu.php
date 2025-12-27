@@ -49,11 +49,19 @@ function wpexams_register_admin_menu() {
 		'edit_posts',
 		'edit.php?post_type=wpexams_exam'
 	);
+
+	add_submenu_page(
+		'wpexams',
+		__( 'Results', 'wpexams' ),
+		__( 'Results', 'wpexams' ),
+		'edit_posts',
+		'edit.php?post_type=wpexams_result'
+	);
 }
 add_action( 'admin_menu', 'wpexams_register_admin_menu' );
 
 /**
- * Fix parent menu highlighting for questions
+ * Fix parent menu highlighting for questions and results
  *
  * @param string $parent_file Parent file.
  * @return string Modified parent file.
@@ -65,7 +73,8 @@ function wpexams_fix_parent_menu( $parent_file ) {
 		return $parent_file;
 	}
 
-	if ( in_array( $current_screen->base, array( 'post', 'edit' ), true ) && 'wpexams_question' === $current_screen->post_type ) {
+	if ( in_array( $current_screen->base, array( 'post', 'edit' ), true ) && 
+	     in_array( $current_screen->post_type, array( 'wpexams_question', 'wpexams_result' ), true ) ) {
 		$parent_file = 'wpexams';
 	}
 
@@ -74,7 +83,7 @@ function wpexams_fix_parent_menu( $parent_file ) {
 add_filter( 'parent_file', 'wpexams_fix_parent_menu' );
 
 /**
- * Fix submenu highlighting for questions
+ * Fix submenu highlighting for questions and results
  *
  * @param string $submenu_file Submenu file.
  * @return string Modified submenu file.
@@ -86,10 +95,13 @@ function wpexams_fix_submenu_file( $submenu_file ) {
 		return $submenu_file;
 	}
 
-	if ( in_array( $current_screen->base, array( 'post', 'edit' ), true ) && 'wpexams_question' === $current_screen->post_type ) {
-		$submenu_file = 'edit.php?post_type=wpexams_question';
+	if ( in_array( $current_screen->base, array( 'post', 'edit' ), true ) ) {
+		if ( 'wpexams_question' === $current_screen->post_type ) {
+			$submenu_file = 'edit.php?post_type=wpexams_question';
+		} elseif ( 'wpexams_result' === $current_screen->post_type ) {
+			$submenu_file = 'edit.php?post_type=wpexams_result';
+		}
 	}
 
 	return $submenu_file;
 }
-add_filter( 'submenu_file', 'wpexams_fix_submenu_file' );
